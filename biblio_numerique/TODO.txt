@@ -1,0 +1,32 @@
+Le syst`eme de biblioth`eque doit g´erer trois entit´es principales : les auteurs,
+les livres et les emprunts.
+1. Auteur
+Chaque auteur poss`ede les informations suivantes :
+— nom : nom de famille de l’auteur.
+— prenom : pr´enom de l’auteur.
+— nationalite : nationalit´e de l’auteur.
+— date naissance : date de naissance.
+Un auteur peut avoir ´ecrit plusieurs livres.
+2. Livre
+Chaque livre contient les informations suivantes :
+— titre : titre complet du livre.
+— isbn : identifiant unique du livre.
+— date publication : ann´ee ou date de publication.
+— nombre pages : nombre total de pages.
+— auteur : lien avec la table Auteur (relation ForeignKey).
+— disponible : bool´een indiquant si le livre est disponible `a l’emprunt.
+3. Emprunt
+Un emprunt correspond `a un livre prˆet´e `a un lecteur. Il contient :
+— nom lecteur : nom complet du lecteur.
+— livre : r´ef´erence au livre emprunt´e (relation ForeignKey).
+— date emprunt : date `a laquelle le livre a ´et´e emprunt´e.
+— date retour : date de retour pr´evue.
+
+Travail demand´e aux ´etudiants
+1. Cr´eation des classes mod`eles
+Dans le fichier gestion/models.py, vous devez :
+— Cr´eer les trois classes : Auteur, Livre et Emprunt.
+— D´efinir les champs appropri´es avec les bons types de donn´ees.
+— Sp´ecifier les relations entre les mod`eles (ForeignKey, OneToMany).
+— Ajouter une m´ethode str pour chaque mod`ele afin d’afficher une
+repr´esentation lisible dans l’interface d’administration.
