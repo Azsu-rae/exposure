@@ -4,7 +4,8 @@ At the birth of the **internet**, two common architecture patterns were used by 
 **C/S (Client/Server)**: as clients as software services. e.g.
 - Email clients talking to email servers
 - Database clients talking to DB servers
-**B/S (Browser/Server)**: one client for all software services. All you would need is a browser + URL. This was revolutionary because the browser became the universal client
+**B/S (Browser/Server)**: one client for all software services. All you would need is a browser + URL. This was revolutionary
+because the browser became the universal client
 
 # Uniform Resource Identifier (URI)
 
@@ -24,4 +25,4 @@ Format:
 
 - **Uniform Resource Name (URN)**
 
-URN is the name of an internet resource. Used in P2P
+URN is the name of an internet resource. Used in P2P. A magnetic link is one example of URN

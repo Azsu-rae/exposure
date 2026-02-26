@@ -11,5 +11,4 @@ A web server handles HTTP and TCP connections, manages the resources served by t
 - **Single-Process**: One request at a time
 - **Multi-Process**: Multiple Processes -> Multiple requests in parallel
 - **Multiplexing**: One process with multiple threads
-- **Multiplexing multi-process**: 
-
+- **Multiplexing multi-process**:

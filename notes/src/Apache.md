@@ -11,5 +11,3 @@
 
 - **mod_so**: is used to process configuration files
 - **mod_core**: is used to dynamically load other modules
-
-
