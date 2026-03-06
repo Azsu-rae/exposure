@@ -1,9 +1,12 @@
+
 import de.huxhorn.sulky.ulid.ULID
+import store.domain.Store
+
 
 @main
-def store() = {
-  val ulid = new ULID()
-  val id = ulid.nextULID()
+def test() = {
 
-  println(id)
+  val ulid = new ULID()
+  val store = Store.create(ulid.nextULID(), "Titanic", "Expensive coffee shop", ulid.nextULID())
+  println(store)
 }
