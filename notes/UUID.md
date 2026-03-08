@@ -407,7 +407,7 @@ Example:
 import de.huxhorn.sulky.ulid.ULID
 
 val ulid = new ULID()
-val id = ulid.nextULID()
+val id = ulid.nextULID() // this is a String!
 
 println(id)
 ```

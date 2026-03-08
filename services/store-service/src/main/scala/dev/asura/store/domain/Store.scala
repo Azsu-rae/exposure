@@ -1,25 +1,24 @@
 package store.domain
 
+import de.huxhorn.sulky.ulid.ULID
 
 case class Store(
-  id: String,
-  name: String,
-  description: String,
-  ownerId: String
+    id: String,
+    name: String,
+    description: String,
+    ownerId: String
 )
-
 
 object Store {
 
   def create(
-      id: String,
       name: String,
-      description: String,
-      ownerId: String
+      description: String
   ): Store = {
 
     require(name.nonEmpty, "Store name cannot be empty")
 
-    Store(id, name, description, ownerId)
+    val ulid = new ULID()
+    Store(ulid.nextULID(), name, description, ulid.nextULID())
   }
 }

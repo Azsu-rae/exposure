@@ -8,3 +8,5 @@ target
 out
 
 .bsp
+.metals
+.bloop
