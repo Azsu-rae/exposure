@@ -10,5 +10,8 @@ store = Store(
     city="Rouiba",
 )
 
-print(store)
-print("hello??")
+stores = Store.objects.all()
+print(stores)
+
+rouiba_stores = Store.objects.filter(city="Rouiba")
+print(rouiba_stores)
