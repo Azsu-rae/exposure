@@ -1,5 +1,8 @@
+import django
+
+django.setup()
+
 from stores.models import Store
-from django.db import models
 
 store = Store(
     name="Titanic",
