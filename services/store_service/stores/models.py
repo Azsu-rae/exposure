@@ -9,6 +9,7 @@ class User(AbstractUser):
 
 
 class Store(models.Model):
+
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     city = models.CharField(max_length=100)
