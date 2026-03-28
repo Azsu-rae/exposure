@@ -3,4 +3,4 @@
 
 # ChatGPT conversation:
 
-- [Dataset search conversation](https://chatgpt.com/share/69c808f7-1f08-8327-8f08-bdce413ee6b4)
+- [Dataset search conversation](https://chatgpt.com/gg/v/69c809b79f648197b222e1d03af74c08?token=xW9eGCJ3gfSvsZ50pELmEw)
