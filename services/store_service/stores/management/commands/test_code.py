@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(f"{Product.objects.filter(id=3)[0]}")
+        self.stdout.write(f"{Product.objects.filter(id=3)[0].name}")
 
     def iterate(self):
         stores = Store.objects.prefetch_related("product_set")

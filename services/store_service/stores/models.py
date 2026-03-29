@@ -50,7 +50,7 @@ class Order(models.Model):
     products = models.ManyToManyField(
         Product,
         through="OrderItem",
-        related_name="orders"
+        related_name="items"
     )
 
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
@@ -66,7 +66,7 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     quantity = models.PositiveIntegerField()

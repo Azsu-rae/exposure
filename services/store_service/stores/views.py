@@ -16,3 +16,10 @@ def product_details(request, pk):
     product = Product.objects.filter(id=pk)[0]
     serializer = ProductSerializer(product)
     return Response(serializer.data)
+
+
+@api_view(["GET"])
+def order_list(request):
+    orders = Order.objects.all()
+    serializer = OrderSerializer(orders, many=True)
+    return Response(serializer.data)
