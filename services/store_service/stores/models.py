@@ -37,7 +37,7 @@ class Product(models.Model):
         return self.stock > 0
 
     def __str__(self):
-        return self.name
+        return f"{self.name} available at {self.store.name}"
 
 
 class Order(models.Model):

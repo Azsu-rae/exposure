@@ -1,3 +1,3 @@
 #! /bin/bash
 
-DJANGO_SETTINGS_MODULE=store_service.settings python -m stores.scripts.test_db
+python manage.py test_code
