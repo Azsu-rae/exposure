@@ -10,18 +10,8 @@ class Command(BaseCommand):
     help = "Populate database with sample data for testing"
 
     def handle(self, *args, **kwargs):
-        User = get_user_model()
 
-        self.stdout.write("Creating users...")
-        user1, _ = User.objects.get_or_create(
-            username="john_doe",
-            defaults={"email": "john@example.com", "first_name": "John", "last_name": "Doe"}
-        )
-        user2, _ = User.objects.get_or_create(
-            username="jane_smith",
-            defaults={"email": "jane@example.com", "first_name": "Jane", "last_name": "Smith"}
-        )
-        self.stdout.write(self.style.SUCCESS(f"Created users: {user1.username}, {user2.username}"))
+        user1, user2 = self.sample_users()
 
         self.stdout.write("Creating stores...")
         stores_data = [
@@ -85,3 +75,17 @@ class Command(BaseCommand):
             f"Created {Order.objects.count()} orders with {OrderItem.objects.count()} order items"
         ))
         self.stdout.write(self.style.SUCCESS("Sample data populated successfully!"))
+
+    def sample_users(self):
+        User = get_user_model()
+        from utils.hardcoded import USERS
+        users = ()
+        self.stdout.write("Creating users...")
+        for user in USERS:
+            users.append(User.objects.get_or_create(
+                username=user["username"],
+                defaults=user["profile_infos"]
+            )[0])
+        self.stdout.write(self.style.SUCCESS(f"Created users: {users}"))
+
+        return users

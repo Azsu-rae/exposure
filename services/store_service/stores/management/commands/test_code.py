@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(f"{Product.objects.filter(id=3)[0].name}")
+        self.stdout.write(f"created user{self.create_superuser()}")
 
     def iterate(self):
         stores = Store.objects.prefetch_related("product_set")
@@ -18,7 +18,7 @@ class Command(BaseCommand):
                 self.stdout.write(f"- {p.name}")
 
     def create_superuser(self):
-        User.objects.create_superuser(
+        return User.objects.create_superuser(
             username="Ilyas",
             email="aitameurmedilyas@gmail.com",
             password="ilyaspass"
