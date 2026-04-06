@@ -20,7 +20,8 @@ class Store(models.Model):
     def __str__(self):
         return (
             f"({self.name}: {self.description} "
-            + f"Created at {self.created_at} in {self.city})"
+            + f"in {self.city} "
+            + f"and ownned by {self.owner.username})"
         )
 
 
@@ -62,7 +63,12 @@ class Order(models.Model):
     )
 
     def __str__(self):
-        return f"Order {self.order_id} by {self.user.username}"
+
+        items = ""
+        for item in self.items.all():
+            items += f"\n* {item}"
+
+        return f"Order by {self.user.username} for:{items}"
 
 
 class OrderItem(models.Model):
@@ -76,4 +82,4 @@ class OrderItem(models.Model):
         return self.product.price * self.quantity
 
     def __str__(self):
-        return f"{self.quantity} x {self.product.name} in order {self.order.order_id}"
+        return f"{self.quantity} x {self.product.name}"

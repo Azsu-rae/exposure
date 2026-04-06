@@ -7,7 +7,7 @@ class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        self.stdout.write(f"created user{self.create_superuser()}")
+        print(type(Product.objects.all()))
 
     def iterate(self):
         stores = Store.objects.prefetch_related("product_set")
