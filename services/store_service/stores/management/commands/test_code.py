@@ -1,13 +1,18 @@
 
 from django.core.management.base import BaseCommand
-from stores.models import Product, Store, User
+from stores.models import Product, Store, User, Order
 
 
 class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        print(type(Product.objects.all()))
+        pass
+
+    def reverse_relations(self):
+        print(User.objects.get(username="abdellaoui_mohamed").store_set.all())
+        print(Order.objects.filter(user=1)[0].items.all())
+        print(Product.objects.get(name="Smart Watch").items.all()[0])
 
     def iterate(self):
         stores = Store.objects.prefetch_related("product_set")

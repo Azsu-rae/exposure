@@ -19,9 +19,9 @@ class Store(models.Model):
 
     def __str__(self):
         return (
-            f"({self.name}: {self.description} "
+            f"{self.name}: {self.description} "
             + f"in {self.city} "
-            + f"and ownned by {self.owner.username})"
+            + f"and ownned by {self.owner.username}"
         )
 
 
@@ -47,12 +47,12 @@ class Order(models.Model):
         CONFIRMED = "Confirmed"
         CANCELLED = "Cancelled"
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
     products = models.ManyToManyField(
         Product,
         through="OrderItem",
-        related_name="items"
     )
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -68,7 +68,7 @@ class Order(models.Model):
         for item in self.items.all():
             items += f"\n* {item}"
 
-        return f"Order by {self.user.username} for:{items}"
+        return f"Order by {self.user.username} for:{items}\n"
 
 
 class OrderItem(models.Model):
