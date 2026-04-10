@@ -29,8 +29,7 @@ class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        # Order.objects.all()[0].product_set()
-        Product.objects.all()[0].order_set()
+        self.serializing()
 
     def model_seriazlizing(self):
         products = Product.objects.all()
@@ -40,6 +39,10 @@ class Command(BaseCommand):
         comment = Comment(email='leila@example.com', content='foo bar')
         serializer = CommentSerializer(comment)
         print(f"{type(serializer.data)=}")
+        print(f"{serializer.data=}")
+        print(f"{serializer.data["email"]=}")
+        if True:
+            exit()
         json = JSONRenderer().render(serializer.data)
         print(f"{type(json)=}")
         print(f"{json=}")

@@ -9,7 +9,7 @@ class User(AbstractUser):
 
 
 class Store(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stores")
 
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -26,7 +26,7 @@ class Store(models.Model):
 
 
 class Product(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
+    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name="products")
 
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -47,7 +47,7 @@ class Order(models.Model):
         CONFIRMED = "Confirmed"
         CANCELLED = "Cancelled"
 
-    products = models.ManyToManyField(
+    ordered_products = models.ManyToManyField(
         Product,
         through="OrderItem",
     )
@@ -72,8 +72,10 @@ class Order(models.Model):
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='items')
+    order = models.ForeignKey(Order,
+                              on_delete=models.CASCADE,
+                              related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
     quantity = models.PositiveIntegerField()
 

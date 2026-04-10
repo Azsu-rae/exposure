@@ -1,11 +1,5 @@
 from rest_framework import serializers
-from .models import Store, Product, Order, OrderItem
-
-
-class StoreSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Store
-        fields = "__all__"
+from .models import Store, Product, Order, OrderItem, User
 
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -15,12 +9,26 @@ class ProductSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.CharField(source="product.name", read_only=True)
+
     class Meta:
         model = OrderItem
-        fields = "__all__"
+        fields = (
+            "quantity",
+            "product"
+        )
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    items = OrderItemSerializer(many=True, read_only=True)
+    user = serializers.CharField(source="user.username", read_only=True)
+
     class Meta:
         model = Order
-        fields = "__all__"
+        fields = (
+            "user",
+            "order_id",
+            "created_at",
+            "status",
+            "items",
+        )
