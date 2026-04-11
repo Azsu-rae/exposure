@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from stores.models import Product, Store, User, Order
-from stores.serializers import ProductSerializer
+from stores.serializers import StoreSerializer, UserBaseSerializer
 
 from rest_framework.renderers import JSONRenderer
 from rest_framework.parsers import JSONParser
@@ -29,11 +29,19 @@ class Command(BaseCommand):
     help = "testing some code"
 
     def handle(self, *args, **kwargs):
-        self.serializing()
+        self.aggregator()
+
+    def aggregator(self):
+        users = [{
+            "owner": user.username,
+            "stores": user.stores.all()
+        } for user in User.objects.all()]
+        user_base = UserBaseSerializer(users, many=True)
+        print(f"{user_base.data=}")
 
     def model_seriazlizing(self):
-        products = Product.objects.all()
-        print(f"{ProductSerializer(products, many=True).data=}")
+        stores = Store.objects.all()
+        print(f"{StoreSerializer(stores, many=True)=}")
 
     def serializing(self):
         comment = Comment(email='leila@example.com', content='foo bar')

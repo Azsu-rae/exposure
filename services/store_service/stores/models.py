@@ -19,9 +19,9 @@ class Store(models.Model):
 
     def __str__(self):
         return (
-            f"{self.name}: {self.description} "
-            + f"in {self.city} "
-            + f"and ownned by {self.owner.username}"
+            f"{self.name}: {self.description}"
+            + f" in {self.city}"
+            + f" and ownned by {self.owner.username}"
         )
 
 
@@ -80,7 +80,7 @@ class OrderItem(models.Model):
     quantity = models.PositiveIntegerField()
 
     @property
-    def item_subtotal(self):
+    def subtotal(self):
         return self.product.price * self.quantity
 
     def __str__(self):
