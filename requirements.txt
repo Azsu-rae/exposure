@@ -1,6 +1,9 @@
 
 
 django
+django-filter
 djangorestframework
+
+requests
 
 Pillow
