@@ -1,5 +1,36 @@
 from rest_framework import serializers
-from .models import Order, OrderItem, Store
+from .models import Order, OrderItem, Store, Product
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    store = serializers.CharField(source='store.name')
+
+    class Meta:
+        model = Product
+        fields = (
+            "store",
+            "name",
+            "description",
+            "price",
+            "stock",
+        )
+
+
+class StoreSerializer(serializers.ModelSerializer):
+    store_name = serializers.CharField(source='name')
+    products_nb = serializers.SerializerMethodField(method_name='product_count')
+    products = ProductSerializer(many=True)
+
+    def product_count(self, obj):
+        return len(obj.products.all())
+
+    class Meta:
+        model = Store
+        fields = (
+            "store_name",
+            "products_nb",
+            "products",
+        )
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -40,20 +71,6 @@ class OrderSerializer(serializers.ModelSerializer):
             "status",
             "items",
             "total_price",
-        )
-
-
-class StoreSerializer(serializers.ModelSerializer):
-    products_nb = serializers.SerializerMethodField(method_name='product_count')
-
-    def product_count(self, obj):
-        return len(obj.products.all())
-
-    class Meta:
-        model = Store
-        fields = (
-            "name",
-            "products_nb",
         )
 
 
