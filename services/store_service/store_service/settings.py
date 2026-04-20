@@ -27,8 +27,19 @@ SECRET_KEY = (
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["localhost",
+    "127.0.0.1",
+    "lasonya-mispacked-berserkly.ngrok-free.dev",]
+import environ
+import os
 
+env = environ.Env()
+
+# this line reads your .env file
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+CHARGILY_KEY    = env("CHARGILY_KEY")
+CHARGILY_SECRET = env("CHARGILY_SECRET")
+CHARGILY_URL    = env("CHARGILY_URL")
 
 # Application definition
 
@@ -41,6 +52,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "stores",
+    "payment",
 ]
 
 MIDDLEWARE = [
