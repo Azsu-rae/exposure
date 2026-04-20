@@ -1,19 +1,56 @@
 # services/views.py
+
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
+
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework import viewsets
+
+from .serialiser import DeliverySerializer, DriverSerializer, DeliveryCompanySerializer, OfficeSerializer
+from .models import Delivery, Driver, DeliveryCompany, RetrievalOffice
+from .simulation import simulate_delivery
+
 import json
 import time
 import random
 import threading
 import logging
-from rest_framework import viewsets
-from django.http import JsonResponse, StreamingHttpResponse
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import get_object_or_404
-from .serialiser import DeliverySerializer, DriverSerializer, DeliveryCompanySerializer, OfficeSerializer
-from .models import Delivery, Driver, DeliveryCompany, RetrievalOffice
-from .simulation import simulate_delivery
-from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework.filters import OrderingFilter, SearchFilter
+
+
+class DeliveryViewSet(viewsets.ModelViewSet):
+
+    queryset = Delivery.objects.all()
+    serializer_class = DeliverySerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
+    filterset_fields = ['delivery_status', 'order_id', 'company']
+
+    search_fields = ['delivery_arrival_address']
+    ordering_fields = ['updated_at', 'estimated_delivery_time']
+
+
+class DriverViewSet(viewsets.ModelViewSet):
+
+    queryset = Driver.objects.all()
+    serializer_class = DriverSerializer
+
+    filter_backends = [DjangoFilterBackend, SearchFilter]
+    filterset_fields = ['company']
+
+    search_fields = ['name', 'phone_number']
+
+
+class CompanyViewSet(viewsets.ModelViewSet):
+    queryset = DeliveryCompany.objects.all()
+    serializer_class = DeliveryCompanySerializer
+
+
+class OfficeViewSet(viewsets.ModelViewSet):
+    queryset = RetrievalOffice.objects.all()
+    serializer_class = OfficeSerializer
 
 
 logger = logging.getLogger(__name__)
@@ -31,35 +68,6 @@ def _delivery_to_dict(delivery):
     }
 
 
-class DeliveryViewSet(viewsets.ModelViewSet):
-    queryset = Delivery.objects.all()
-    filter_backends = [DjangoFilterBackend, SearchFilter, OrderingFilter]
-    filterset_fields = ['delivery_status', 'order_id', 'company']
-    search_fields = ['delivery_arrival_address']
-    ordering_fields = ['updated_at', 'estimated_delivery_time']
-
-    serializer_class = DeliverySerializer
-
-
-class DriverViewSet(viewsets.ModelViewSet):
-    queryset = Driver.objects.all()
-    filter_backends = [DjangoFilterBackend, SearchFilter]
-    filterset_fields = ['company']
-    search_fields = ['name', 'phone_number']
-
-    serializer_class = DriverSerializer
-
-
-class CompanyViewSet(viewsets.ModelViewSet):
-    queryset = DeliveryCompany.objects.all()
-    serializer_class = DeliveryCompanySerializer
-
-
-class OfficeViewSet(viewsets.ModelViewSet):
-    queryset = RetrievalOffice.objects.all()
-    serializer_class = OfficeSerializer
-
-
 @require_http_methods(["POST"])
 @csrf_exempt
 def start_simulation(request, delivery_id):
@@ -71,7 +79,9 @@ def start_simulation(request, delivery_id):
     body = {}
     if request.body:
         try:
+            print(f"parsing {request.body}")
             body = json.loads(request.body)
+            print(f"result: {body}")
         except json.JSONDecodeError:
             pass
 

@@ -1,5 +1,0 @@
-/db.sqlite3
-/services/migrations/
-/services/__pycache__/
-/delivery_service/__pycache__/
-*.log
