@@ -1,11 +1,9 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
-
+from django.conf import settings
 import uuid
 
 
-class User(AbstractUser):
-    pass
+
 
 
 class Store(models.Model):
@@ -46,7 +44,10 @@ class Order(models.Model):
         CONFIRMED = "Confirmed"
         CANCELLED = "Cancelled"
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # ← instead of direct User import
+        on_delete=models.CASCADE
+    )
     products = models.ManyToManyField(
         Product,
         through="OrderItem",
