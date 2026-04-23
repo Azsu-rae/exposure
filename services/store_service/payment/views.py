@@ -4,16 +4,18 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from rest_framework.decorators import api_view
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, permission_classes
 
 from .models import Payment
 from .services import create_checkout, client
 from .serializers import PaymentCreateSerializer, PaymentSerializer
-
+from ..users.permissions import IsBuyer, IsDelivery
 
 # 📊 LIST PAYMENTS
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def payment_list(request):
     payments = Payment.objects.all()
     serializer = PaymentSerializer(payments, many=True)
@@ -23,6 +25,7 @@ def payment_list(request):
 # 💳 CREATE PAYMENT
 
 @api_view(["POST"])
+@permission_classes([IsBuyer])
 def create_payment(request):
     serializer = PaymentCreateSerializer(data=request.data)
     if not serializer.is_valid():
@@ -70,6 +73,7 @@ def create_payment(request):
 
 # 🚚 CONFIRM DELIVERY (triggers escrow release or refund)
 @api_view(["POST"])
+@permission_classes([IsDelivery])
 def confirm_delivery(request, payment_id):
     try:
         payment = Payment.objects.get(id=payment_id)
