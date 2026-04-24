@@ -68,14 +68,15 @@ def _delivery_to_dict(delivery):
     }
 
 
-@require_http_methods(["POST"])
 @csrf_exempt
+@require_http_methods(["POST"])
 def start_simulation(request, delivery_id):
     delivery = get_object_or_404(Delivery, pk=delivery_id)
 
     if delivery.delivery_status == Delivery.DeliveryStatus.DELIVERED:
         return JsonResponse({"error": "This delivery is already delivered."}, status=400)
 
+    print("We should be working?")
     body = {}
     if request.body:
         try:
@@ -83,7 +84,10 @@ def start_simulation(request, delivery_id):
             body = json.loads(request.body)
             print(f"result: {body}")
         except json.JSONDecodeError:
+            print("Exception?")
             pass
+    else:
+        print("The requestion doesn't actually have a body")
 
     step_min = int(body.get("step_min", 60))
     step_max = int(body.get("step_max", 120))
