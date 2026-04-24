@@ -1,11 +1,11 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from users.models import User
 
 import uuid
 
 
-class User(AbstractUser):
-    pass
+# class User(AbstractUser):
+#     pass
 
 
 class Store(models.Model):

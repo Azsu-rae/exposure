@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="col-md-8 mx-auto">
+
+    <!-- Post -->
+    <div class="card p-3 mb-4">
+        <h4>{{ post.title }}</h4>
+        <p>{{ post.description }}</p>
+        <h5 class="text-success">${{ post.price }}</h5>
+    </div>
+
+    <!-- Add Review -->
+    <div class="card p-3 mb-4">
+        <h5>Add Review</h5>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="mb-2">
+                <label>Stars</label>
+                <input type="number" name="stars" min="1" max="5" class="form-control">
+            </div>
+
+            <div class="mb-2">
+                <label>Comment</label>
+                <textarea name="comment" class="form-control"></textarea>
+            </div>
+
+            <button class="btn btn-primary">Submit</button>
+        </form>
+    </div>
+
+    <!-- Reviews -->
+    {% for review in post.reviews.all %}
+    <div class="card p-3 mb-2">
+        <strong>⭐ {{ review.stars }}/5</strong>
+        <p>{{ review.comment }}</p>
+        <small class="text-muted">{{ review.created_at }}</small>
+    </div>
+    {% empty %}
+    <p>No reviews yet</p>
+    {% endfor %}
+
+</div>
+
+{% endblock %}

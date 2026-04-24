@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand
 from django.contrib.auth import get_user_model
 
 from stores.models import Store, Product, Order, OrderItem
+# from services.store_service.stores.models import Store, Product, Order, OrderItem
 
 
 class Command(BaseCommand):

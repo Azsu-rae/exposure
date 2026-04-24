@@ -15,6 +15,9 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
@@ -41,6 +44,8 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "stores",
+    "users",
+    "social.apps.SocialConfig",
 ]
 
 MIDDLEWARE = [
@@ -54,11 +59,11 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "store_service.urls"
-
+import os
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -83,7 +88,7 @@ DATABASES = {
     }
 }
 
-AUTH_USER_MODEL = 'stores.User'
+AUTH_USER_MODEL = 'users.User'
 
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
@@ -115,6 +120,12 @@ USE_I18N = True
 
 USE_TZ = True
 
+# SIMPLE_JWT = {
+#     "ACCESS_TOKEN_LIFETIME":      timedelta(minutes=60),
+#     "REFRESH_TOKEN_LIFETIME":     timedelta(days=7),
+#     "ROTATE_REFRESH_TOKENS":      True,
+#     "BLACKLIST_AFTER_ROTATION":   True,
+# }
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
