@@ -2,15 +2,16 @@ from django.db import models
 from django.utils import timezone
 from .services import transfer_to_seller
 
+
 class Payment(models.Model):
 
     class Status(models.TextChoices):
-        PENDING  = "PENDING"
-        PAID     = "PAID"
-        FAILED   = "FAILED"
+        PENDING = "PENDING"
+        PAID = "PAID"
+        FAILED = "FAILED"
         CANCELED = "CANCELED"
-        EXPIRED  = "EXPIRED"
-        HELD     = "HELD"
+        EXPIRED = "EXPIRED"
+        HELD = "HELD"
         RELEASED = "RELEASED"
         REFUNDED = "REFUNDED"
 
@@ -18,18 +19,18 @@ class Payment(models.Model):
         CASH = "CASH"
         CARD = "CARD"
 
-    order_id     = models.UUIDField()
-    amount       = models.IntegerField()
-    method       = models.CharField(         # ← NEW
+    order_id = models.UUIDField()
+    amount = models.IntegerField()
+    method = models.CharField(         # ← NEW
         max_length=10,
         choices=Method.choices,
         default=Method.CARD,
     )
 
-    entity_id    = models.CharField(max_length=100, unique=True, null=True, blank=True)
+    entity_id = models.CharField(max_length=100, unique=True, null=True, blank=True)
     checkout_url = models.URLField(null=True, blank=True)
 
-    status       = models.CharField(
+    status = models.CharField(
         max_length=10,
         choices=Status.choices,
         default=Status.PENDING,
@@ -37,7 +38,7 @@ class Payment(models.Model):
 
     release_date = models.DateTimeField(null=True, blank=True)  # ← NEW
 
-    created_at   = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Payment {self.id} ({self.method}) - {self.status}"
