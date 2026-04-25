@@ -1,6 +1,7 @@
 from chargily_pay import ChargilyClient
 from django.conf import settings
 from chargily_pay.entity import Checkout
+
 client = ChargilyClient(
     secret=settings.CHARGILY_SECRET,
     key=settings.CHARGILY_KEY,
@@ -25,6 +26,8 @@ def create_checkout(payment):
     payment.save()
 
     return payment
+
+
 def transfer_to_seller(chargily_id, amount):
     """
     Sends money from YOUR Chargily account to the seller's Chargily account.
