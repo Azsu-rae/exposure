@@ -11,9 +11,11 @@ from rest_framework.decorators import api_view, permission_classes
 from .models import Payment
 from .services import create_checkout, client
 from .serializers import PaymentCreateSerializer, PaymentSerializer
-from ..users.permissions import IsBuyer, IsDelivery
+from users.permissions import IsBuyer, IsDelivery
 
 # 📊 LIST PAYMENTS
+
+
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def payment_list(request):
@@ -33,8 +35,8 @@ def create_payment(request):
 
     validated = serializer.validated_data
     order_id = validated["order_id"]
-    amount   = validated["amount"]
-    method   = validated["method"]
+    amount = validated["amount"]
+    method = validated["method"]
 
     # ... rest of your logic unchanged
     if not order_id or not amount:

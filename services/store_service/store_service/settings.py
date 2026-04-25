@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+from datetime import timedelta
+import os
+import environ
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,18 +31,16 @@ SECRET_KEY = (
 DEBUG = True
 
 ALLOWED_HOSTS = ["localhost",
-    "127.0.0.1",
-    "lasonya-mispacked-berserkly.ngrok-free.dev",]
-import environ
-import os
+                 "127.0.0.1",
+                 "lasonya-mispacked-berserkly.ngrok-free.dev",]
 
 env = environ.Env()
 
 # this line reads your .env file
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
-CHARGILY_KEY    = env("CHARGILY_KEY")
+CHARGILY_KEY = env("CHARGILY_KEY")
 CHARGILY_SECRET = env("CHARGILY_SECRET")
-CHARGILY_URL    = env("CHARGILY_URL")
+CHARGILY_URL = env("CHARGILY_URL")
 
 # Application definition
 
@@ -137,7 +138,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-from datetime import timedelta
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
