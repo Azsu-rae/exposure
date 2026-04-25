@@ -1,15 +1,11 @@
-from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from django.conf import settings
 import uuid
 
 
-class User(AbstractUser):
-    pass
-
-
 class Store(models.Model):
-    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name="stores")
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="stores")
 
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -47,12 +43,16 @@ class Order(models.Model):
         CONFIRMED = "Confirmed"
         CANCELLED = "Cancelled"
 
-    ordered_products = models.ManyToManyField(
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,  # ← instead of direct User import
+        on_delete=models.CASCADE
+    )
+    products = models.ManyToManyField(
         Product,
         through="OrderItem",
     )
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
     created_at = models.DateTimeField(auto_now_add=True)

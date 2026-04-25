@@ -5,5 +5,8 @@ django-filter
 djangorestframework
 
 requests
+django-environ
+djangorestframework-simplejwt
 
 Pillow
+chargily-pay
