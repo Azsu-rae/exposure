@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 
 from stores.utils.hardcoded import USERS, STORES, PRODUCTS, ORDERS
 from stores.models import Store, Product, Order, OrderItem
+# from services.store_service.stores.models import Store, Product, Order, OrderItem
 
 User = get_user_model()
 

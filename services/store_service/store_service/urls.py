@@ -27,5 +27,7 @@ urlpatterns = [
     path("api/", include("payment.urls")),
     path("api/",    include("users.urls")),
     # path("api/", include("social.urls")),
+    # path("api/", include("payment.urls")),
+    path("api/", include("social.urls")),
     # path("api/", include("delivery.urls")),
 ]

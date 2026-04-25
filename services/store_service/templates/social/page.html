@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}Store{% endblock %}
+{% load static %}
+{% block content %}
+
+<!-- Profile Header -->
+<div class="card mb-4">
+    <div class="profile-header"></div>
+
+    <div class="text-center p-3">
+        <img src="{% static 'img.png' %}" class="profile-img">
+        <h3 class="mt-2">{{ page.name }}</h3>
+        <p class="text-muted">{{ page.bio }}</p>
+    </div>
+</div>
+
+<!-- Posts -->
+<div class="row">
+    <div class="col-md-8 mx-auto">
+
+        {% for post in posts %}
+        <div class="card mb-3 p-3">
+
+            <h5>{{ post.title }}</h5>
+            <p>{{ post.description }}</p>
+
+            <div class="d-flex justify-content-between">
+                <span class="text-success fw-bold">${{ post.price }}</span>
+                <a href="{% url 'post_detail' post.id %}" class="btn btn-sm btn-outline-primary">
+                    View Reviews
+                </a>
+            </div>
+
+        </div>
+        {% empty %}
+        <p>No posts yet</p>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}
