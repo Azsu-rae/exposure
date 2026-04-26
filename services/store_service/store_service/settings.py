@@ -50,7 +50,7 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
+    "corsheaders",
     "stores",
     "payment",
     "rest_framework",
@@ -60,6 +60,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -139,9 +140,13 @@ STATIC_URL = "static/"
 
 from datetime import timedelta
 
+# settings.py
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
+    ],
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.IsAuthenticated",
     ],
 }
 
@@ -157,4 +162,22 @@ AUTH_PASSWORD_VALIDATORS = [
      "OPTIONS": {"min_length": 8}},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# CORS — allow Flutter web and emulator
+CORS_ALLOW_ALL_ORIGINS = True       # fine for development
+
+AUTHENTICATION_BACKENDS = [
+    "users.backends.EmailBackend",  # ← allows login by email
+]
+
+MEDIA_URL  = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:52137",
+    "http://127.0.0.1:52137",
+    "http://localhost:8000",
+    "http://127.0.0.1:8000",
 ]
