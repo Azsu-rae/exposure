@@ -5,6 +5,7 @@ from django.utils import timezone
 
 class User(AbstractUser):
     # ── fields every user has (buyer behaviour) ──────────────────────────
+    email = models.EmailField(unique=True)
     phone           = models.CharField(max_length=20, unique=True, null=True, blank=True)
     profile_picture = models.ImageField(upload_to="profiles/", null=True, blank=True)
     wilaya          = models.CharField(max_length=100, blank=True)
