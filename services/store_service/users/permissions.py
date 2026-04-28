@@ -30,3 +30,11 @@ class IsInBuyerMode(BasePermission):
             request.user.is_authenticated
             and request.user.active_mode == "BUYER"
         )
+
+
+class IsAdminUser(BasePermission):
+    """Only users with is_staff=True can access."""
+    message = "Admin access required."
+
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.is_staff

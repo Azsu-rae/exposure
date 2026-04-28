@@ -74,7 +74,7 @@ class UserSerializer(serializers.ModelSerializer):
         fields = [
             "id", "username", "email", "phone",
             "profile_picture", "wilaya", "address",
-            "is_activated", "active_mode",
+            "is_activated", "active_mode",'is_staff',
             "buyer_profile", "seller_profile",
             "created_at",
         ]

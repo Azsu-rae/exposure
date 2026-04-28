@@ -11,7 +11,7 @@ from rest_framework.decorators import api_view, permission_classes
 from .models import Payment
 from .services import create_checkout, client
 from .serializers import PaymentCreateSerializer, PaymentSerializer
-
+from users.permissions import IsAdminUser
 
 # 📊 LIST PAYMENTS
 @api_view(["GET"])
@@ -143,3 +143,29 @@ def chargily_webhook(request):
         payment.save()
 
     return HttpResponse(status=200)
+
+ # 1 — List all RELEASED payments (waiting to be paid out)
+@api_view(["GET"])
+@permission_classes([IsAdminUser])  # only is_staff=True can call this
+def pending_payouts(request):
+    payments = Payment.objects.filter(status="RELEASED").order_by("release_date")
+    serializer = PaymentSerializer(payments, many=True)
+    return Response(serializer.data)
+
+# 2 — Mark one payment as paid out
+@api_view(["POST"])
+@permission_classes([IsAdminUser])
+def mark_paid_out(request, payment_id):
+    try:
+        payment = Payment.objects.get(id=payment_id)
+    except Payment.DoesNotExist:
+        return Response({"error": "Not found"}, status=404)
+
+    if payment.status != "RELEASED":
+        return Response({"error": "Must be RELEASED first"}, status=400)
+
+    payment.status = "PAID_OUT"
+    payment.paid_out_date = timezone.now()
+    payment.paid_out_note = request.data.get("note", "")  # CCP ref number
+    payment.save()
+    return Response({"message": "Done"})

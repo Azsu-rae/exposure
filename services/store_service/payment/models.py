@@ -8,11 +8,12 @@ class Payment(models.Model):
         PENDING  = "PENDING"
         PAID     = "PAID"
         FAILED   = "FAILED"
-        CANCELED = "CANCELED"
-        EXPIRED  = "EXPIRED"
+        # CANCELED = "CANCELED"
+        # EXPIRED  = "EXPIRED"
         HELD     = "HELD"
         RELEASED = "RELEASED"
         REFUNDED = "REFUNDED"
+        PAID_OUT = "PAID_OUT"
 
     class Method(models.TextChoices):
         CASH = "CASH"
