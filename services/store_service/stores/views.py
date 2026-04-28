@@ -1,5 +1,8 @@
-from stores.serializers import ProductSerializer, OrderSerializer, OrderItemSerializer, StoreSerializer
-from stores.models import Product, Order, OrderItem, Store
+from stores.serializers import ProductSerializer, OrderSerializer, OrderItemSerializer
+from stores.models import Product, Order, OrderItem
+from users.models import Store
+from users.serializers import StoreSerializer
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
 

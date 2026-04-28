@@ -1,64 +1,160 @@
-# users/serializers.py
+from django.db import transaction
 from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
-from .models import User, SellerProfile, DeliveryProfile
+from .models import User, BuyerProfile, SellerProfile, Store
 
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
 
 class RegisterSerializer(serializers.ModelSerializer):
-    password  = serializers.CharField(write_only=True, validators=[validate_password])
-    password2 = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model  = User
-        fields = ["username", "email", "phone", "password", "password2", "role"]
-
-    def validate_role(self, value):
-        if value in ("ADMIN", "DELIVERY"):
-            raise serializers.ValidationError("You cannot register with this role.")
-        return value
-
-    def validate(self, data):
-        if data["password"] != data["password2"]:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
-        return data
+        fields = ["id", "username", "email", "password", "phone"]
 
     def create(self, validated_data):
-        validated_data.pop("password2")
-        password = validated_data.pop("password")
-        user = User(**validated_data)
-        user.set_password(password)
-        user.save()
-
-        if user.role == User.Role.SELLER:
-            SellerProfile.objects.create(
-                user=user,
-                store_name=f"{user.username}'s store"
-            )
-
-        return user
+        return User.objects.create_user(
+            username = validated_data["username"],
+            email    = validated_data["email"],
+            password = validated_data["password"],
+            phone    = validated_data.get("phone"),
+        )
+        # BuyerProfile created automatically via signal
 
 
 class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
+    email    = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
+    def validate(self, data):
+        from django.contrib.auth import authenticate
+        # allow login by email — requires EMAIL_BACKEND or custom backend
+        user = authenticate(username=data["email"], password=data["password"])
+        if not user:
+            raise serializers.ValidationError("Invalid credentials.")
+        data["user"] = user
+        return data
 
-class UserSerializer(serializers.ModelSerializer):
+
+# ── User read ─────────────────────────────────────────────────────────────────
+
+class StoreSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = User
-        fields = ["id", "username", "email", "phone", "role"]
-        read_only_fields = ["id", "role"]
+        model  = Store
+        fields = [
+            "id", "name", "description", "logo",
+            "wilaya", "city", "chargily_id",
+            "is_active", "rating", "created_at",
+        ]
 
 
 class SellerProfileSerializer(serializers.ModelSerializer):
+    store = StoreSerializer(read_only=True)
+
     class Meta:
         model  = SellerProfile
-        fields = ["store_name", "chargily_id", "balance", "is_verified"]
-        read_only_fields = ["balance", "is_verified"]
+        fields = [
+            "bio", "is_verified", "balance",
+            "rating", "created_at", "store",
+        ]
 
 
-class DeliveryProfileSerializer(serializers.ModelSerializer):
+class BuyerProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = DeliveryProfile
-        fields = ["company_name", "wilaya", "is_active"]
-        read_only_fields = ["is_active"]
+        model  = BuyerProfile
+        fields = ["default_wilaya", "default_address", "created_at"]
+
+
+class UserSerializer(serializers.ModelSerializer):
+    buyer_profile  = BuyerProfileSerializer(read_only=True)
+    seller_profile = SellerProfileSerializer(read_only=True)  # null if not activated
+
+    class Meta:
+        model  = User
+        fields = [
+            "id", "username", "email", "phone",
+            "profile_picture", "wilaya", "address",
+            "is_activated", "active_mode",'is_staff',
+            "buyer_profile", "seller_profile",
+            "created_at",
+        ]
+
+
+# ── Profile updates ───────────────────────────────────────────────────────────
+
+class UpdateProfileSerializer(serializers.ModelSerializer):
+    """Buyer updates their own basic info."""
+    class Meta:
+        model  = User
+        fields = ["username", "phone", "profile_picture", "wilaya", "address"]
+
+    def update(self, instance, validated_data):
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+        return instance
+
+
+class UpdateBuyerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = BuyerProfile
+        fields = ["default_wilaya", "default_address"]
+
+
+# ── Seller activation (the big form) ─────────────────────────────────────────
+
+class SellerActivationSerializer(serializers.Serializer):
+    # personal — updates the User fields
+    phone   = serializers.CharField(max_length=20)
+    wilaya  = serializers.CharField(max_length=100)
+    address = serializers.CharField()
+    bio     = serializers.CharField(required=False, allow_blank=True, default="")
+
+    # store — creates Store under SellerProfile
+    store_name        = serializers.CharField(max_length=100)
+    store_description = serializers.CharField(required=False, allow_blank=True, default="")
+    store_wilaya      = serializers.CharField(max_length=100)
+    store_city        = serializers.CharField(max_length=100)
+
+    def validate(self, data):
+        user = self.context["request"].user
+        if user.is_activated:
+            raise serializers.ValidationError("Already activated as a seller.")
+        return data
+
+    @transaction.atomic
+    def save(self):
+        user = self.context["request"].user
+        d    = self.validated_data
+
+        # update user personal fields
+        user.phone   = d["phone"]
+        user.wilaya  = d["wilaya"]
+        user.address = d["address"]
+        user.activate_seller()           # is_activated=True, active_mode=SELLER, save()
+
+        seller = SellerProfile.objects.create(user=user, bio=d["bio"])
+
+        Store.objects.create(
+            seller      = seller,
+            name        = d["store_name"],
+            description = d["store_description"],
+            wilaya      = d["store_wilaya"],
+            city        = d["store_city"],
+        )
+        return user
+
+
+# ── Seller profile update (after activation) ─────────────────────────────────
+
+class UpdateSellerProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = SellerProfile
+        fields = ["bio", "id_document"]
+
+
+class UpdateStoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = Store
+        fields = ["name", "description", "logo", "wilaya", "city",
+                  "chargily_id", "is_active"]

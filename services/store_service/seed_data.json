@@ -1,0 +1,114 @@
+{
+  "users": [
+    {
+      "username": "user1",
+      "email": "user1@test.com",
+      "password": "12345678",
+      "wilaya": "Algiers",
+      "address": "Bab Ezzouar",
+      "is_seller": true
+    },
+    {
+      "username": "user2",
+      "email": "user2@test.com",
+      "password": "12345678",
+      "wilaya": "Oran",
+      "address": "Bir El Djir",
+      "is_seller": false
+    },
+    {
+      "username": "user3",
+      "email": "user3@test.com",
+      "password": "12345678",
+      "wilaya": "Constantine",
+      "address": "El Khroub",
+      "is_seller": true
+    }
+  ],
+
+  "stores": [
+    {
+      "owner": "user1",
+      "name": "Tech Store",
+      "description": "dddddddddddddd",
+      "wilaya": "Algiers",
+      "city": "Bab Ezzouar"
+    },
+    {
+      "owner": "user3",
+      "name": "Phone Shop",
+      "description": "gggggggggggggggg",
+      "wilaya": "Constantine",
+      "city": "El Khroub"
+    }
+  ],
+
+  "products": [
+    {
+      "store": "Tech Store",
+      "name": "Laptop",
+      "description": "Powerful laptop for work and gaming",
+      "price": 1200,
+      "stock": 10,
+      "category": "Electronics"
+    },
+    {
+      "store": "Tech Store",
+      "name": "Headphones",
+      "description": "Noise cancelling headphones",
+      "price": 150,
+      "stock": 25,
+      "category": "Accessories"
+    },
+    {
+      "store": "Phone Shop",
+      "name": "iPhone 13",
+      "description": "Apple smartphone",
+      "price": 900,
+      "stock": 5,
+      "category": "Phones"
+    }
+  ],
+
+  "posts": [
+    {
+      "store": "Tech Store",
+      "product": "Laptop",
+      "title": "Amazing Laptop",
+      "description": "Best performance for developers"
+    },
+    {
+      "store": "Tech Store",
+      "product": "Headphones",
+      "title": "Top Headphones",
+      "description": "High quality sound"
+    },
+    {
+      "store": "Phone Shop",
+      "product": "iPhone 13",
+      "title": "Latest iPhone",
+      "description": "Smooth and fast experience"
+    }
+  ],
+
+  "reviews": [
+    {
+      "post": "Amazing Laptop",
+      "user": "user2",
+      "stars": 5,
+      "comment": "Excellent product!"
+    },
+    {
+      "post": "Top Headphones",
+      "user": "user2",
+      "stars": 4,
+      "comment": "Very good but a bit expensive"
+    },
+    {
+      "post": "Latest iPhone",
+      "user": "user1",
+      "stars": 5,
+      "comment": "Best phone ever!"
+    }
+  ]
+}
