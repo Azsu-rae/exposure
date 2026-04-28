@@ -1,0 +1,27 @@
+info:
+  name: login
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: http://127.0.0.1:8000/api/auth/login/
+  body:
+    type: json
+    data: |-
+      {
+        "username": "ait_ameur_ilyas",
+        "password": "123heaAA"
+      }
+  auth: inherit
+
+script:
+  res: |-
+    bru.setEnvVar("access", res.getBody().tokens.access);
+    bru.setEnvVar("refresh", res.getBody().tokens.refresh);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

@@ -12,7 +12,11 @@ class User(AbstractUser):
         ADMIN = "ADMIN"
 
     phone = models.CharField(max_length=20, unique=True, null=True, blank=True)
-    role = models.CharField(max_length=10, choices=Role.choices, default=Role.BUYER)
+    role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        default=Role.BUYER
+    )
 
     # username
     # password
@@ -28,6 +32,7 @@ class User(AbstractUser):
     # last_login
     # groups
     # user_permissions
+
     def __str__(self):
         return f"{self.username} ({self.role})"
 
@@ -45,7 +50,13 @@ class User(AbstractUser):
 
 
 class SellerProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="seller_profile")
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="seller_profile"
+    )
+
     store_name = models.CharField(max_length=255)
     chargily_id = models.CharField(max_length=100, blank=True)
     balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -57,7 +68,13 @@ class SellerProfile(models.Model):
 
 
 class DeliveryProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="delivery_profile")
+
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name="delivery_profile"
+    )
+
     company_name = models.CharField(max_length=255)
     wilaya = models.CharField(max_length=100)
     is_active = models.BooleanField(default=True)

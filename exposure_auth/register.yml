@@ -1,0 +1,26 @@
+info:
+  name: register
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: http://127.0.0.1:8000/api/auth/register/
+  body:
+    type: json
+    data: |-
+      {
+        "username": "ait_ameur_ilyas",
+        "password": "123heaAA",
+        "password2": "123heaAA",
+        "email": "aitameurilyas@gmai.com",
+        "first_name": "Ilyas",
+        "last_name": "Ait-Ameur"
+      }
+  auth: inherit
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

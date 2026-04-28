@@ -1,25 +1,38 @@
 # users/serializers.py
-from rest_framework import serializers
+
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+
 from .models import User, SellerProfile, DeliveryProfile
 
 
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+
 class RegisterSerializer(serializers.ModelSerializer):
-    password  = serializers.CharField(write_only=True, validators=[validate_password])
+    password = serializers.CharField(
+        write_only=True,
+        validators=[validate_password]
+    )
     password2 = serializers.CharField(write_only=True)
 
     class Meta:
-        model  = User
-        fields = ["username", "email", "phone", "password", "password2", "role"]
+        model = User
+        fields = ["username", "email", "phone",
+                  "password", "password2", "role"]
 
     def validate_role(self, value):
         if value in ("ADMIN", "DELIVERY"):
-            raise serializers.ValidationError("You cannot register with this role.")
+            raise serializers.ValidationError(
+                "You cannot register with this role.")
         return value
 
     def validate(self, data):
         if data["password"] != data["password2"]:
-            raise serializers.ValidationError({"password": "Passwords do not match."})
+            raise serializers.ValidationError(
+                {"password": "Passwords do not match."})
         return data
 
     def create(self, validated_data):
@@ -38,27 +51,22 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class LoginSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField(write_only=True)
-
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = User
+        model = User
         fields = ["id", "username", "email", "phone", "role"]
         read_only_fields = ["id", "role"]
 
 
 class SellerProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = SellerProfile
+        model = SellerProfile
         fields = ["store_name", "chargily_id", "balance", "is_verified"]
         read_only_fields = ["balance", "is_verified"]
 
 
 class DeliveryProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model  = DeliveryProfile
+        model = DeliveryProfile
         fields = ["company_name", "wilaya", "is_active"]
         read_only_fields = ["is_active"]
