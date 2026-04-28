@@ -1,6 +1,0 @@
-name: QA
-variables:
-  - name: access
-    value: ""
-  - name: refresh
-    value: ""

@@ -1,5 +1,4 @@
 
-
 django
 django-filter
 djangorestframework
@@ -10,3 +9,4 @@ djangorestframework-simplejwt
 
 Pillow
 chargily-pay
+psycopg2-binary

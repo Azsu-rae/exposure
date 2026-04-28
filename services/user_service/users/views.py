@@ -103,7 +103,6 @@ def my_profile(request):
             data["seller_profile"] = SellerProfileSerializer(
                 user.seller_profile).data
         except SellerProfile.DoesNotExist:
-            vies
             data["seller_profile"] = None
     return Response(data)
 
