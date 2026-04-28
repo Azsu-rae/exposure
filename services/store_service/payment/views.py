@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated,AllowAny
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 
@@ -16,6 +16,9 @@ from users.permissions import IsAdminUser
 # 📊 LIST PAYMENTS
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
+
+# @permission_classes([AllowAny])
+
 def payment_list(request):
     payments = Payment.objects.all()
     serializer = PaymentSerializer(payments, many=True)
@@ -100,7 +103,7 @@ def confirm_delivery(request, payment_id):
         payment.status = "RELEASED"
         payment.release_date = timezone.now()
         payment.save()
-        return Response({"message": "Money released to seller"})
+        return Response({"message": "Money will be released to seller by admin"})
 
     if returned:
         payment.status = "REFUNDED"
@@ -148,7 +151,10 @@ def chargily_webhook(request):
 @api_view(["GET"])
 @permission_classes([IsAdminUser])  # only is_staff=True can call this
 def pending_payouts(request):
-    payments = Payment.objects.filter(status="RELEASED").order_by("release_date")
+    payments = Payment.objects.filter(
+        status="RELEASED",
+        method="CARD"
+    ).order_by("release_date")
     serializer = PaymentSerializer(payments, many=True)
     return Response(serializer.data)
 

@@ -4,11 +4,12 @@ from . import views
 
 urlpatterns = [
     path("payments/",                                    views.payment_list),
-    path("payments/create/",                             views.create_payment),
-    path("payments/webhook/",                            views.chargily_webhook),
-    path("payments/<int:payment_id>/confirm-delivery/",  views.confirm_delivery),
-    path('payments/pending-payouts/', views.pending_payouts),
-    path('payments/<int:payment_id>/mark-paid-out/', views.mark_paid_out),
+    path("create/",                             views.create_payment),
+    path("/webhook/",                            views.chargily_webhook),
+    path("/<int:payment_id>/confirm-delivery/",  views.confirm_delivery),
+    path("pending-payouts/", views.pending_payouts, name="pending-payouts"),
+    path("<int:payment_id>/mark-paid-out/", views.mark_paid_out, name="mark-paid-out"),
+
 ]
 
 # path('<int:payment_id>/release/', release_payment),
