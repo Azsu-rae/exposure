@@ -24,6 +24,15 @@ def page_api(request, page_id):
     serializer = StoreSerializer(page)
     return Response(serializer.data)
 
+from django.db.models import Q
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def page_posts_api(request, page_id):
+    offset = int(request.GET.get("offset", 0))
+    posts = Post.objects.filter(page_id=page_id).order_by("-created_at")[offset:offset + 10]
+    serializer = PostSerializer(posts, many=True)
+    return Response(serializer.data)
 
 # 2. POST DETAIL + REVIEWS
 @api_view(["GET"])
@@ -43,16 +52,28 @@ def post_detail_api(request, post_id):
 
 
 # 3. FEED
+# 3. FEED
+from django.db.models import Q
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def feed(request):
     category = request.GET.get("category")
+    search = request.GET.get("search")
     offset = int(request.GET.get("offset", 0))
 
     queryset = Post.objects.all()
 
     if category:
         queryset = queryset.filter(product__category=category)
+
+    if search:
+        queryset = queryset.filter(
+            Q(title__icontains=search) |
+            Q(description__icontains=search) |
+            Q(product__name__icontains=search)
+        )
 
     posts = queryset.order_by("-created_at")[offset:offset + 10]
 

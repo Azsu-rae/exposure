@@ -4,6 +4,7 @@ from . import views
 urlpatterns = [
     # Page + its posts
     path("page/<int:page_id>/", views.page_api, name="page_api"),
+    path("page/<int:page_id>/posts/", views.page_posts_api, name="page_posts_api"),
 
     # Post detail + its reviews
     path("post/<int:post_id>/", views.post_detail_api, name="post_detail_api"),
