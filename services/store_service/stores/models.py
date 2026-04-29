@@ -35,6 +35,7 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=1)
     image = models.ImageField(upload_to="product_images/", null=True, blank=True)
     is_blocked = models.BooleanField(default=False)
+    category = models.CharField(max_length=100, default='General')
 
     @property
     def in_stock(self):

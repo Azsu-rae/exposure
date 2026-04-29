@@ -4,20 +4,22 @@ from .models import Order, OrderItem, Store, Product
 
 class ProductSerializer(serializers.ModelSerializer):
     store = serializers.CharField(source='store.name')
+    store_id = serializers.IntegerField(source='store.id', read_only=True)
 
     class Meta:
         model = Product
         fields = (
             "id",
             "store",
+            "store_id",
             "name",
             "description",
             "price",
             "stock",
             "image",
             "is_blocked",
+            "category",
         )
-
 
 class ProductCreateSerializer(serializers.ModelSerializer):
     class Meta:
@@ -28,7 +30,8 @@ class ProductCreateSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "image",
-            "is_blocked"
+            "is_blocked",
+            "category"
         )
 
 
@@ -45,6 +48,9 @@ class StoreSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "store_name",
+            "description",
+            "logo",
+            "rating",
             "products_nb",
             "products",
         )
@@ -105,10 +111,21 @@ class OrderSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
     total_price = serializers.SerializerMethodField(method_name='total')
+    delivery_status = serializers.SerializerMethodField()
 
     def total(self, obj):
         items = obj.items.all()
         return sum(item.subtotal for item in items)
+        
+    def get_delivery_status(self, obj):
+        try:
+            from delivery.models import Delivery
+            delivery = Delivery.objects.filter(order_id=str(obj.order_id)).first()
+            if delivery:
+                return delivery.delivery_status
+            return "Pending"
+        except Exception:
+            return "Pending"
 
     class Meta:
         model = Order
@@ -117,6 +134,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "order_id",
             "created_at",
             "status",
+            "delivery_status",
             "items",
             "total_price",
         )

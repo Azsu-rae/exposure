@@ -177,3 +177,13 @@ def mark_paid_out(request, payment_id):
     payment.paid_out_note = request.data.get("note", "")  # CCP ref number
     payment.save()
     return Response({"message": "Done"})
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def payment_by_order(request, order_id):
+    payment = Payment.objects.filter(order_id=order_id).first()
+    if not payment:
+        return Response({"error": "Payment not found for this order"}, status=404)
+    serializer = PaymentSerializer(payment)
+    return Response(serializer.data)

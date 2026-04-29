@@ -69,6 +69,19 @@ class ProductsView(APIView):
                 except Exception as e:
                     print("AI prediction failed:", e)
 
+            # Auto-generate a linked Post to enter the social feed natively
+            if not product.is_blocked:
+                try:
+                    from social.models import Post
+                    Post.objects.create(
+                        page=product.store,
+                        product=product,
+                        title=product.name,
+                        description=product.description
+                    )
+                except Exception as e:
+                    print("Could not generate Post for feed:", e)
+
             return Response({
                 "message": "Product created successfully",
                 "product_id": product.id,
@@ -79,6 +92,8 @@ class ProductsView(APIView):
 
 class OrdersView(APIView):
     def get(self, request, format=None):
-        orders = Order.objects.all()
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=401)
+        orders = Order.objects.filter(user=request.user)
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
