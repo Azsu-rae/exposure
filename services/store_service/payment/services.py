@@ -15,7 +15,7 @@ def create_checkout(payment):
         currency="dzd",
         success_url="http://localhost:8000/success",
         failure_url="http://localhost:8000/failure",
-        webhook_endpoint="https://lasonya-mispacked-berserkly.ngrok-free.dev/api/payments/webhook/",
+        webhook_endpoint="https://lasonya-mispacked-berserkly.ngrok-free.dev/api/payment/webhook/",
     )
 
     response = client.create_checkout(checkout=checkout_data)
@@ -25,13 +25,13 @@ def create_checkout(payment):
     payment.save()
 
     return payment
-def transfer_to_seller(chargily_id, amount):
+def transfer_to_seller(ccp, amount):
     """
-    Sends money from YOUR Chargily account to the seller's Chargily account.
+    Sends money from YOUR Chargily account to the seller's ccp account.
     Called automatically when payment is released.
     """
     response = client.transfer({
-        "to_account": chargily_id,   # seller's Chargily ID
+        "to_account": ccp,   # seller's Chargily ID
         "amount": amount,
         "currency": "dzd",
     })

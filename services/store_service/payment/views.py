@@ -15,9 +15,9 @@ from users.permissions import IsAdminUser
 
 # 📊 LIST PAYMENTS
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 
-# @permission_classes([AllowAny])
+@permission_classes([AllowAny])
 
 def payment_list(request):
     payments = Payment.objects.all()
@@ -28,6 +28,8 @@ def payment_list(request):
 # 💳 CREATE PAYMENT
 
 @api_view(["POST"])
+@permission_classes([AllowAny])
+
 def create_payment(request):
     serializer = PaymentCreateSerializer(data=request.data)
     if not serializer.is_valid():

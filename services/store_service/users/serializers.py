@@ -43,7 +43,7 @@ class StoreSerializer(serializers.ModelSerializer):
         model  = Store
         fields = [
             "id", "name", "description", "logo",
-            "wilaya", "city", "chargily_id",
+            "wilaya", "city", "ccp",
             "is_active", "rating", "created_at",
         ]
 
@@ -109,12 +109,15 @@ class SellerActivationSerializer(serializers.Serializer):
     wilaya  = serializers.CharField(max_length=100)
     address = serializers.CharField()
     bio     = serializers.CharField(required=False, allow_blank=True, default="")
+    id_document = serializers.ImageField(required=False, allow_null=True)
 
     # store — creates Store under SellerProfile
     store_name        = serializers.CharField(max_length=100)
     store_description = serializers.CharField(required=False, allow_blank=True, default="")
     store_wilaya      = serializers.CharField(max_length=100)
     store_city        = serializers.CharField(max_length=100)
+    ccp               = serializers.CharField(max_length=100, required=False, allow_blank=True, default="")
+    logo              = serializers.ImageField(required=False, allow_null=True)
 
     def validate(self, data):
         user = self.context["request"].user
@@ -133,7 +136,11 @@ class SellerActivationSerializer(serializers.Serializer):
         user.address = d["address"]
         user.activate_seller()           # is_activated=True, active_mode=SELLER, save()
 
-        seller = SellerProfile.objects.create(user=user, bio=d["bio"])
+        seller = SellerProfile.objects.create(
+            user=user, 
+            bio=d["bio"],
+            id_document=d.get("id_document")
+        )
 
         Store.objects.create(
             seller      = seller,
@@ -141,6 +148,8 @@ class SellerActivationSerializer(serializers.Serializer):
             description = d["store_description"],
             wilaya      = d["store_wilaya"],
             city        = d["store_city"],
+            ccp         = d.get("ccp", ""),
+            logo        = d.get("logo")
         )
         return user
 
@@ -157,4 +166,4 @@ class UpdateStoreSerializer(serializers.ModelSerializer):
     class Meta:
         model  = Store
         fields = ["name", "description", "logo", "wilaya", "city",
-                  "chargily_id", "is_active"]
+                  "ccp", "is_active"]
