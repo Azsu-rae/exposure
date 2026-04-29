@@ -12,14 +12,20 @@ class ReviewSerializer(serializers.ModelSerializer):
 
 
 class PostSerializer(serializers.ModelSerializer):
-    product = serializers.JSONField(read_only=True)
-    store = serializers.JSONField(read_only=True)
+    image = serializers.ImageField(required=False)
 
     class Meta:
         model = Post
-        fields = ["id", "store", "title", "description", "product", "created_at"]
-
-
+        fields = [
+            "id",
+            "store_id",
+            "product_id",
+            "image",
+            "category",
+            "title",
+            "description",
+            "created_at"
+        ]
 
 
 

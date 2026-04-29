@@ -5,7 +5,8 @@ from django.db import models
 class Post(models.Model):
     store_id = models.IntegerField()
     product_id = models.IntegerField()
-
+    image = models.ImageField(upload_to="posts_images/", null=True, blank=True)
+    category = models.CharField(max_length=100)
     title = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
@@ -14,7 +15,6 @@ class Post(models.Model):
 class Review(models.Model):
     post_id = models.IntegerField()
     user_id = models.IntegerField()
-
     stars = models.IntegerField()
     comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)

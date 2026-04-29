@@ -1,0 +1,206 @@
+{
+  "endpoints": [
+    {
+      "url": "http://127.0.0.1:8000/api/social/posts/create/",
+      "method": "POST",
+      "auth_required": true,
+      "input": {
+        "body": {
+          "product_id": "integer",
+          "title": "string",
+          "description": "string",
+          "category": "string",
+          "image": "file (optional)"
+        }
+      },
+      "output": {
+        "status": 201,
+        "body": {
+          "id": 1,
+          "store_id": 10,
+          "product_id": 101,
+          "image": "http://api.yoursite.com/media/posts_images/image.jpg",
+          "category": "electronics",
+          "title": "New Phone",
+          "description": "Great phone",
+          "created_at": "2026-04-29T15:19:23Z"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8000/api/social/posts/<post_id>/",
+      "method": "GET",
+      "auth_required": false,
+      "input": {
+        "params": { "post_id": "integer" }
+      },
+      "output": {
+        "status": 200,
+        "body": {
+          "post": {
+            "id": 1,
+            "store_id": 10,
+            "product_id": 101,
+            "image": "url",
+            "category": "electronics",
+            "title": "New Phone",
+            "description": "Great phone",
+            "created_at": "timestamp"
+          },
+          "product": { "id": 101, "name": "Phone X", "price": 999 },
+          "store_name": "Tech Store",
+          "avg_rating": 4.5,
+          "reviews_count": 1,
+          "reviews": [
+            {
+              "id": 1,
+              "user": { "id": 5, "username": "alex" },
+              "stars": 5,
+              "comment": "Good",
+              "created_at": "timestamp"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8000/api/social/posts/<post_id>/delete/",
+      "method": "DELETE",
+      "auth_required": true,
+      "input": {
+        "params": { "post_id": "integer" }
+      },
+      "output": {
+        "status": 200,
+        "body": { "message": "Post deleted" }
+      }
+    },
+
+    {
+  "url": "http://127.0.0.1:8000/api/social/feed/",
+  "method": "GET",
+  "auth_required": false,
+  "input": {
+    "query_params": {
+      "category": "string (optional)",
+      "offset": "integer (optional)"
+    }
+  },
+  "output": {
+    "status": 200,
+    "body": [
+      {
+        "id": 1,
+        "store_id": 10,
+        "product_id": 101,
+        "image": "http://api.yoursite.com/media/posts_images/post1.jpg",
+        "category": "electronics",
+        "title": "New Phone",
+        "description": "Check this out!",
+        "created_at": "2026-04-29T15:19:23Z",
+        "avg_rating": 4.5,
+        "product": {
+          "id": 101,
+          "name": "Phone X"
+        },
+        "store": {
+          "name": "Tech Galaxy",
+          "logo": "http://api.yoursite.com/media/store_logos/tech_galaxy.png"
+        }
+      }
+    ]
+  }
+}
+    ,
+    {
+      "url": "http://127.0.0.1:8000/api/social/search/",
+      "method": "GET",
+      "auth_required": false,
+      "input": {
+        "query_params": {
+          "q": "string (search query)",
+          "category": "string (optional)"
+        }
+      },
+      "output": {
+        "status": 200,
+        "body": [
+          {
+            "id": 1,
+            "store_id": 10,
+            "product_id": 101,
+            "image": "url",
+            "category": "electronics",
+            "title": "New Phone",
+            "description": "Great phone",
+            "created_at": "timestamp",
+            "avg_rating": 4.5
+          }
+        ]
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8000/api/social/pages/<store_id>/",
+      "method": "GET",
+      "auth_required": false,
+      "input": {
+        "params": { "store_id": "integer" }
+      },
+      "output": {
+        "status": 200,
+        "body": {
+          "store": { "id": 10, "name": "Tech Store" },
+          "store_avg_rating": 4.5,
+          "store_reviews_count": 1,
+          "posts": [
+            {
+              "id": 1,
+              "store_id": 10,
+              "product_id": 101,
+              "image": "url",
+              "category": "electronics",
+              "title": "New Phone",
+              "description": "Great phone",
+              "created_at": "timestamp",
+              "avg_rating": 4.5
+            }
+          ]
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8000/api/social/reviews/create/",
+      "method": "POST",
+      "auth_required": true,
+      "input": {
+        "body": {
+          "post_id": "integer",
+          "stars": "integer (1-5)",
+          "comment": "string"
+        }
+      },
+      "output": {
+        "status": 201,
+        "body": {
+          "id": 1,
+          "user": null,
+          "stars": 5,
+          "comment": "Amazing!",
+          "created_at": "2026-04-29T15:19:23Z"
+        }
+      }
+    },
+    {
+      "url": "http://127.0.0.1:8000/api/social/reviews/<review_id>/delete/",
+      "method": "DELETE",
+      "auth_required": true,
+      "input": {
+        "params": { "review_id": "integer" }
+      },
+      "output": {
+        "status": 200,
+        "body": { "message": "Review deleted" }
+      }
+    }
+  ]
+}

@@ -1,25 +1,24 @@
 from django.urls import path
-from . import views
+from .views import (
+    create_post, post_detail, delete_post,
+    feed, search_posts, page_detail,
+    create_review, delete_review
+)
 
 urlpatterns = [
-    # Page + its posts
-    path("page/<int:page_id>/", views.page_api, name="page_api"),
-    path("page/<int:page_id>/posts/", views.page_posts_api, name="page_posts_api"),
+    # 🔵 POSTS
+    path("posts/create/", create_post),
+    path("posts/<int:post_id>/", post_detail),
+    path("posts/<int:post_id>/delete/", delete_post),
 
-    # Post detail + its reviews
-    path("post/<int:post_id>/", views.post_detail_api, name="post_detail_api"),
+    # 🔵 FEED + SEARCH
+    path("feed/", feed),
+    path("search/", search_posts),
 
-    # Feed (with ?offset= & ?category=)
-    path("feed/", views.feed, name="feed"),
+    # 🔵 PAGES (STORE)
+    path("pages/<int:store_id>/", page_detail),
 
-    # Create post
-    path("review/add/",  views.create_post, name="create_post"),
-
-    # Add review
-    path("add-review/", views.add_review, name="add_review"),
-
-    # Get reviews of a post (pagination supported)
-    path("post/<int:post_id>/reviews/", views.get_post_reviews, name="get_post_reviews"),
+    # 🔵 REVIEWS
+    path("reviews/create/", create_review),
+    path("reviews/<int:review_id>/delete/", delete_review),
 ]
-
-
