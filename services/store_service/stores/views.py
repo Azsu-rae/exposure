@@ -1,20 +1,39 @@
+from stores.serializers import (
+    OrderSerializer,
+    OverviewSerializer,
+    ProductSerializer
+)
 
-from stores.serializers import OrderSerializer, OverviewSerializer, ProductSerializer, StoreSerializer
-from stores.models import Order, User, Product, Store
+from stores.models import Order, Product
+from stores.services import get_user
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework import status
 
 
+# ---------------------------
+# OVERVIEW
+# ---------------------------
 class OverviewView(APIView):
     def get(self, request, format=None):
-        user_base = [{
-            "owner": user.username,
-            "stores": user.stores.all()
-        } for user in User.objects.all()]
-        return Response(OverviewSerializer(user_base, many=True).data)
+        user_id = request.user.id
+
+        user = get_user(user_id)
+        owner = user.get("username") if user else "unknown"
+
+        # since Store is NOT in this service anymore
+        data = {
+            "owner": owner,
+            "stores": []  # must come from user-service or gateway
+        }
+
+        return Response(data)
 
 
+# ---------------------------
+# PRODUCTS
+# ---------------------------
 class ProductsView(APIView):
     def get(self, request, format=None):
         products = Product.objects.all()
@@ -22,12 +41,38 @@ class ProductsView(APIView):
         return Response(serializer.data)
 
     def post(self, request, format=None):
-        print(request.body)
-        return Response({})
+        serializer = ProductSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+# ---------------------------
+# ORDERS
+# ---------------------------
 class OrdersView(APIView):
     def get(self, request, format=None):
-        orders = Order.objects.all()
+        user_id = request.user.id
+
+        orders = Order.objects.filter(user_id=user_id)
         serializer = OrderSerializer(orders, many=True)
+
         return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = OrderSerializer(
+            data=request.data,
+            context={"request": request}
+        )
+
+        if serializer.is_valid():
+            order = serializer.save()
+            return Response(
+                OrderSerializer(order).data,
+                status=status.HTTP_201_CREATED
+            )
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

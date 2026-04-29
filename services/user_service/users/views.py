@@ -1,142 +1,216 @@
-# users/views.py
-
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
-
-from django.contrib.auth import authenticate
-
-from .models import SellerProfile, User
+from .models import BuyerProfile
+from .permissions import IsActivatedSeller, IsInSellerMode
 from .serializers import (
-    RegisterSerializer,
-    LoginSerializer,
-    UserSerializer,
-    SellerProfileSerializer,
+    RegisterSerializer, LoginSerializer, UserSerializer,
+    UpdateProfileSerializer, UpdateBuyerProfileSerializer,
+    SellerActivationSerializer, UpdateSellerProfileSerializer,
+    UpdateStoreSerializer,
 )
 
 
+#from services and for them
+from .serializers import UserSerializer , StoreSerializer
+from .models import User , Store
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_user(request, user_id):
+    user = User.objects.filter(id=user_id).first()
+
+    if not user:
+        return Response({"error": "User not found"}, status=404)
+
+    serializer = UserSerializer(user)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_store(request, store_id):
+    store = Store.objects.filter(id=store_id).first()
+
+    if not store:
+        return Response({"error": "Store not found"}, status=404)
+
+    serializer = StoreSerializer(store)
+    data = serializer.data
+
+    data["owner_id"] = store.seller.user.id
+
+    return Response(data)
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_user_store(request, user_id):
+    store = Store.objects.filter(seller__user__id=user_id).first()
+
+    if not store:
+        return Response({"error": "Store not found"}, status=404)
+
+    serializer = StoreSerializer(store)
+    return Response(serializer.data)
+
+
+# ── helpers ───────────────────────────────────────────────────────────────────
+
 def get_tokens(user):
     refresh = RefreshToken.for_user(user)
-    return {
-        "refresh": str(refresh),
-        "access":  str(refresh.access_token),
-    }
+    return {"refresh": str(refresh), "access": str(refresh.access_token)}
+
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def register(request):
+    s = RegisterSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    user = s.save()
+    return Response(
+        {"user": UserSerializer(user).data, "tokens": get_tokens(user)},
+        status=status.HTTP_201_CREATED,
+    )
 
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def login(request):
-
-    serializer = LoginSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
-
-    user = authenticate(**serializer.validated_data)
-    if not user:
-        return Response({"error": "Invalid username or password."}, status=401)
-
-    tokens = get_tokens(user)
-    return Response({
-        "user":   UserSerializer(user).data,
-        "tokens": tokens,
-    })
-
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def register(request):
-
-    serializer = RegisterSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
-
-    user = serializer.save()
-    tokens = get_tokens(user)
-    return Response({
-        "message": "Account created successfully.",
-        "user":    UserSerializer(user).data,
-        "tokens":  tokens,
-    }, status=201)
-
-
-@api_view(["POST"])
-@permission_classes([IsAuthenticated])
-def change_password(request):
-    user = request.user
-    if not user.check_password(request.data.get("old_password")):
-        return Response({"error": "Old password is incorrect."}, status=400)
-    user.set_password(request.data.get("new_password"))
-    user.save()
-    return Response({"message": "Password changed successfully."})
+    print("LOGIN REQUEST DATA:", request.data)
+    s = LoginSerializer(data=request.data)
+    s.is_valid(raise_exception=True)
+    user = s.validated_data["user"]
+    return Response({"user": UserSerializer(user).data, "tokens": get_tokens(user)})
 
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
 def logout(request):
     try:
-        token = RefreshToken(request.data.get("refresh"))
-        token.blacklist()
-        return Response({"message": "Logged out successfully."})
+        RefreshToken(request.data["refresh"]).blacklist()
     except Exception:
-        return Response({"error": "Invalid or expired token."}, status=400)
+        pass  # already invalid — still return 200
+    return Response({"detail": "Logged out."})
 
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def refresh_token(request):
-    try:
-        token = RefreshToken(request.data.get("refresh"))
-        return Response({"access": str(token.access_token)})
-    except Exception:
-        return Response({"error": "Invalid or expired refresh token."}, status=401)
-
+# ── Current user ──────────────────────────────────────────────────────────────
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
-def my_profile(request):
-    user = request.user
-    data = UserSerializer(user).data
-    if user.is_seller:
-        try:
-            data["seller_profile"] = SellerProfileSerializer(
-                user.seller_profile).data
-        except SellerProfile.DoesNotExist:
-            data["seller_profile"] = None
-    return Response(data)
+def me(request):
+    return Response(UserSerializer(request.user).data)
 
 
-@api_view(["PUT"])
+@api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
 def update_profile(request):
-
-    serializer = UserSerializer(request.user, data=request.data, partial=True)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
-
-    serializer.save()
-    return Response(serializer.data)
+    """Update base user fields (name, phone, wilaya, address, avatar)."""
+    s = UpdateProfileSerializer(request.user, data=request.data, partial=True)
+    s.is_valid(raise_exception=True)
+    s.save()
+    return Response(UserSerializer(request.user).data)
 
 
-@api_view(["PUT"])
+@api_view(["PATCH"])
 @permission_classes([IsAuthenticated])
+def update_buyer_profile(request):
+    """Update buyer-specific fields (default address, wilaya)."""
+    profile, _ = BuyerProfile.objects.get_or_create(user=request.user)
+    s = UpdateBuyerProfileSerializer(profile, data=request.data, partial=True)
+    s.is_valid(raise_exception=True)
+    s.save()
+    return Response(UserSerializer(request.user).data)
+
+
+# ── Mode switching ────────────────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def switch_mode(request):
+    """
+    Toggle BUYER ↔ SELLER.
+    If not activated → 403 so Flutter can redirect to activation form.
+    """
+    try:
+        request.user.switch_mode()
+    except ValueError as e:
+        return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+    return Response({
+        "active_mode": request.user.active_mode,
+        "user": UserSerializer(request.user).data,
+    })
+
+
+# ── Seller activation ─────────────────────────────────────────────────────────
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def activate_seller(request):
+    """
+    The one-time form that creates SellerProfile + Store atomically.
+    After this, switch_mode works freely.
+    """
+    s = SellerActivationSerializer(data=request.data, context={"request": request})
+    s.is_valid(raise_exception=True)
+    user = s.save()
+    return Response(
+        {"user": UserSerializer(user).data},
+        status=status.HTTP_201_CREATED,
+    )
+
+
+# ── Seller profile & store updates (post-activation) ─────────────────────────
+
+@api_view(["PATCH"])
+@permission_classes([IsActivatedSeller])
 def update_seller_profile(request):
-    if not request.user.is_seller:
-        return Response({"error": "Only sellers can access this."}, status=403)
-    serializer = SellerProfileSerializer(
+    s = UpdateSellerProfileSerializer(
         request.user.seller_profile,
         data=request.data,
-        partial=True
+        partial=True,
     )
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
-    serializer.save()
-    return Response(serializer.data)
+    s.is_valid(raise_exception=True)
+    s.save()
+    return Response(UserSerializer(request.user).data)
 
 
-@api_view(["DELETE"])
+@api_view(["PATCH"])
+@permission_classes([IsActivatedSeller])
+def update_store(request):
+    s = UpdateStoreSerializer(
+        request.user.seller_profile.store,
+        data=request.data,
+        partial=True,
+    )
+    s.is_valid(raise_exception=True)
+    s.save()
+    return Response(UserSerializer(request.user).data)
+
+
+# ── Password ──────────────────────────────────────────────────────────────────
+
+@api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def delete_account(request):
-    request.user.delete()
-    return Response({"message": "Account deleted."}, status=204)
+def change_password(request):
+    user         = request.user
+    old_password = request.data.get("old_password")
+    new_password = request.data.get("new_password")
+
+    if not old_password or not new_password:
+        return Response({"detail": "Both fields required."}, status=400)
+
+    if not user.check_password(old_password):
+        return Response({"detail": "Wrong current password."}, status=400)
+
+    if len(new_password) < 8:
+        return Response({"detail": "Password must be at least 8 characters."}, status=400)
+
+    user.set_password(new_password)
+    user.save()
+    return Response({"detail": "Password updated."})
