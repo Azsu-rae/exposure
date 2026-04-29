@@ -92,7 +92,7 @@ class Store(models.Model):
     logo        = models.ImageField(upload_to="store_logos/", null=True, blank=True)
     wilaya      = models.CharField(max_length=100)
     city        = models.CharField(max_length=100)
-    chargily_id = models.CharField(max_length=100, blank=True)
+    ccp = models.CharField(max_length=100, blank=True)
     is_active   = models.BooleanField(default=True)
     rating      = models.FloatField(default=0.0)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
