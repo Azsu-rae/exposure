@@ -19,6 +19,10 @@ from .serializers import (
 
 def get_tokens(user):
     refresh = RefreshToken.for_user(user)
+    refresh['username'] = user.username
+    refresh['email'] = user.email
+    refresh['role'] = user.role
+    refresh['is_active'] = user.is_active
     return {
         "refresh": str(refresh),
         "access":  str(refresh.access_token),
@@ -140,3 +144,17 @@ def update_seller_profile(request):
 def delete_account(request):
     request.user.delete()
     return Response({"message": "Account deleted."}, status=204)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def lookup_user(request):
+    username = request.query_params.get("username")
+    print(f"looking up {username}...")
+    if not username:
+        return Response({"error": "username query param required."}, status=400)
+    try:
+        user = User.objects.get(username=username)
+        return Response({"id": user.id, "username": user.username, "role": user.role})
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)

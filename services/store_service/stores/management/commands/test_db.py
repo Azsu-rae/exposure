@@ -1,14 +1,11 @@
+
 from django.core.management import BaseCommand
 
 from django.db import connection
 
-from users.models import User
-
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        user = User.objects.get(username="abdellaoui_mohamed")
-        print(f"{user=}")
         cursor = connection.cursor()
         cursor.execute("SELECT 1;")
         print(cursor.fetchone())

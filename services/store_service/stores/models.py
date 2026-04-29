@@ -1,38 +1,56 @@
-from django.db import models
-from users.models import User
 
-from django.conf import settings
+from django.utils import timezone
+from django.db import models
 import uuid
 
 
-# class User(AbstractUser):
-#     pass
-
-
 class Store(models.Model):
-    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="stores")
+
+    seller = models.IntegerField()
 
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    wilaya = models.CharField(max_length=100)
     city = models.CharField(max_length=100)
-    # meaning that django automatically sets this field when the object is created
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    # meaning?
+    is_active = models.BooleanField(default=True)
+
+    # should they be here?
+    ccp = models.CharField(max_length=100, blank=True)
+    rating = models.FloatField(default=0.0)
+#    logo = models.ImageField(
+#        upload_to="store_logos/",
+#        null=True,
+#        blank=True
+#    )
 
     def __str__(self):
-        return (
-            f"{self.name}: {self.description}"
-            + f" in {self.city}"
-            + f" and ownned by {self.owner.username}"
-        )
+        return f"{self.name}"
 
 
 class Product(models.Model):
-    store = models.ForeignKey(Store, on_delete=models.CASCADE, related_name="products")
+
+    store = models.ForeignKey(
+        Store,
+        on_delete=models.CASCADE,
+        related_name="products"
+    )
 
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    stock = models.PositiveIntegerField()
+    stock = models.PositiveIntegerField(default=1)
+    category = models.CharField(max_length=100, default='General')
+
+    # here?
+    is_blocked = models.BooleanField(default=False)
+#    image = models.ImageField(
+#        upload_to="product_images/",
+#        null=True,
+#        blank=True
+#    )
 
     @property
     def in_stock(self):
@@ -43,23 +61,22 @@ class Product(models.Model):
 
 
 class Order(models.Model):
+
     class StatusChoices(models.TextChoices):
         PENDING = "Pending"
         CONFIRMED = "Confirmed"
         CANCELLED = "Cancelled"
 
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,  # ← instead of direct User import
-        on_delete=models.CASCADE
-    )
+    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+
+    user = models.IntegerField()
     products = models.ManyToManyField(
         Product,
         through="OrderItem",
     )
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-    order_id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    shipping_address = models.CharField(max_length=255, blank=True, null=True)
+    payment_method = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     status = models.CharField(
         max_length=10,
@@ -68,19 +85,20 @@ class Order(models.Model):
     )
 
     def __str__(self):
-
         items = ""
         for item in self.items.all():
             items += f"\n* {item}"
-
-        return f"Order by {self.user.username} for:{items}\n"
+        return f"Order by user {self.user} for:{items}\n"
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order,
-                              on_delete=models.CASCADE,
-                              related_name='items')
+
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items'
+    )
 
     quantity = models.PositiveIntegerField()
 

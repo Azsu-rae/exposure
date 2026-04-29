@@ -2,8 +2,23 @@ from rest_framework import serializers
 from .models import Order, OrderItem, Store, Product
 
 
+class StoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Store
+        fields = [
+            "seller", "name", "description",  # "logo",
+            "wilaya", "city", "created_at",
+            # ...
+            "is_active",
+            # ...
+            "rating", "ccp"
+        ]
+
+
 class ProductSerializer(serializers.ModelSerializer):
-    store = serializers.CharField(source='store.name')
+
+    store = StoreSerializer(read_only=True)
+    is_blocked = serializers.BooleanField(read_only=True)
 
     class Meta:
         model = Product
@@ -13,23 +28,9 @@ class ProductSerializer(serializers.ModelSerializer):
             "description",
             "price",
             "stock",
-        )
-
-
-class StoreSerializer(serializers.ModelSerializer):
-    store_name = serializers.CharField(source='name')
-    products_nb = serializers.SerializerMethodField(method_name='product_count')
-    products = ProductSerializer(many=True)
-
-    def product_count(self, obj):
-        return len(obj.products.all())
-
-    class Meta:
-        model = Store
-        fields = (
-            "store_name",
-            "products_nb",
-            "products",
+            # "image",
+            "is_blocked",
+            "category",
         )
 
 
@@ -52,37 +53,39 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    # by default, 'user' would be a 'PrimaryKeyRelatedField'
-    # good alternatives are: 'HyperLinkRelatedField', 'SlugRelatedField'
-    user = serializers.StringRelatedField(read_only=True)
+
+    user = serializers.IntegerField(read_only=True)
     items = OrderItemSerializer(many=True, read_only=True)
+
     total_price = serializers.SerializerMethodField(method_name='total')
+#    delivery_status = serializers.SerializerMethodField(method_name='get_delivery_status')
 
     def total(self, obj):
         items = obj.items.all()
         return sum(item.subtotal for item in items)
 
+#    def get_delivery_status(self, obj):
+#        try:
+#            from delivery.models import Delivery
+#            delivery = Delivery.objects.filter(order_id=str(obj.order_id)).first()
+#            if delivery:
+#                return delivery.delivery_status
+#            return "Pending"
+#        except Exception:
+#            return "Pending"
+
     class Meta:
         model = Order
         fields = (
-            "user",
             "order_id",
+
+            "user",
+            "shipping_address",
+            "payment_method",
             "created_at",
             "status",
+            # "delivery_status",
+
             "items",
             "total_price",
         )
-
-
-class OverviewSerializer(serializers.Serializer):
-    """
-    owner: "myself"
-    stores: [
-        {
-            name:
-            products_nb:
-        }
-    ]
-    """
-    owner = serializers.CharField()
-    stores = StoreSerializer(many=True, read_only=True)

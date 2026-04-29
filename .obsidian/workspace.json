@@ -11,13 +11,32 @@
             "id": "d8ab3e3bb1796b21",
             "type": "leaf",
             "state": {
-              "type": "empty",
-              "state": {},
+              "type": "markdown",
+              "state": {
+                "file": "notes/ressources.md",
+                "mode": "source",
+                "source": false
+              },
               "icon": "lucide-file",
-              "title": "New tab"
+              "title": "ressources"
+            }
+          },
+          {
+            "id": "31020a2abb2a0a86",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "notes/Repport.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Repport"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -176,6 +195,24 @@
       "bases:Create new base": false
     }
   },
-  "active": "d8ab3e3bb1796b21",
-  "lastOpenFiles": []
+  "active": "31020a2abb2a0a86",
+  "lastOpenFiles": [
+    "README.md~",
+    "services/store_service/stores/permissions.py~",
+    "services/store_service/stores/management/commands/sample_db.py~",
+    "services/store_service/stores/utils/hardcoded.py~",
+    "services/user_service/users/management/commands/test_db.py~",
+    "services/user_service/users/management/commands/4913",
+    "services/user_service/users/__pycache__/views.cpython-312.pyc.128868264279712",
+    "services/user_service/users/views.py~",
+    "services/store_service/stores/management/commands/__pycache__/test_service.cpython-312.pyc",
+    "services/store_service/stores/management/commands/test_service.py~",
+    "services/store_service/stores/management/commands/test_service.py",
+    "notes/ressources.md",
+    "notes/Repport.md",
+    "notes/UUID.md",
+    "notes/ORM.md",
+    "notes/docs.md",
+    "README.md"
+  ]
 }
