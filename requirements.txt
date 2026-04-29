@@ -12,3 +12,4 @@ chargily-pay
 psycopg2-binary
 
 gunicorn
+cryptography

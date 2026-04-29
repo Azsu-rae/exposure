@@ -52,7 +52,12 @@ REST_FRAMEWORK = {
     ],
 }
 
+_KEYS_DIR = BASE_DIR.parent.parent / 'keys'
+
 SIMPLE_JWT = {
+    "ALGORITHM": "RS256",
+    "SIGNING_KEY": open(_KEYS_DIR / 'private.pem').read(),
+    "VERIFYING_KEY": open(_KEYS_DIR / 'public.pem').read(),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=5),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }

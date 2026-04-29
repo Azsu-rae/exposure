@@ -1,4 +1,5 @@
 
+keys/
 .mypy_cache
 __pycache__
 .venv

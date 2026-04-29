@@ -39,8 +39,16 @@ DATABASES = {
 TIME_ZONE = 'UTC'
 USE_TZ = True
 
+_KEYS_DIR = BASE_DIR.parent.parent / 'keys'
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'stores.authentication.ServiceJWTAuthentication',
     ],
+}
+
+SIMPLE_JWT = {
+    'ALGORITHM': 'RS256',
+    'SIGNING_KEY': None,
+    'VERIFYING_KEY': open(_KEYS_DIR / 'public.pem').read(),
 }
