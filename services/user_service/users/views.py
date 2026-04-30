@@ -18,16 +18,27 @@ from .serializers import (
 from .serializers import UserSerializer , StoreSerializer
 from .models import User , Store
 
+from django.http import JsonResponse
+
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({"status": "ok"})
+
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_user(request, user_id):
-    user = User.objects.filter(id=user_id).first()
+    return Response({"status": "ok", "id": user_id, "name":"karem "})
+    # user = User.objects.filter(id=user_id).first()
 
-    if not user:
-        return Response({"error": "User not found"}, status=404)
+    # if not user:
+    #     return Response({"error": "User not found"}, status=404)
 
-    serializer = UserSerializer(user)
-    return Response(serializer.data)
+    # serializer = UserSerializer(user)
+    # return Response(serializer.data)
 
 
 @api_view(["GET"])

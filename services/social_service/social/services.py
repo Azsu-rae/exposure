@@ -1,21 +1,37 @@
 import requests
+import time
+from .discovery import get_user_service_url
 
-USER_SERVICE = "http://127.0.0.1:8000/api"
 STORE_SERVICE = "http://store-service:8000"
 
+_cached_user_service_url = "http://127.0.0.1:8000/api"
+_last_user_service_fetch_time = 0
+
+def get_user_service_base_url():
+    global _cached_user_service_url, _last_user_service_fetch_time
+    current_time = time.time()
+    
+    # Refresh cache every 20 seconds
+    if current_time - _last_user_service_fetch_time > 20:
+        new_url = get_user_service_url()
+        if new_url:
+            _cached_user_service_url = f"{new_url}/api"
+        _last_user_service_fetch_time = current_time
+        
+    return _cached_user_service_url
 
 def get_user(user_id):
-    r = requests.get(f"{USER_SERVICE}/users/{user_id}")
+    base_url = get_user_service_base_url()
+    r = requests.get(f"{base_url}/users/{user_id}")
     return r.json() if r.status_code == 200 else None
-
 
 def get_product(product_id):
     r = requests.get(f"{STORE_SERVICE}/products/{product_id}")
     return r.json() if r.status_code == 200 else None
 
-
 def get_store(store_id):
-    r = requests.get(f"{USER_SERVICE}/stores/{store_id}")
+    base_url = get_user_service_base_url()
+    r = requests.get(f"{base_url}/stores/{store_id}")
     return r.json() if r.status_code == 200 else None
 
 

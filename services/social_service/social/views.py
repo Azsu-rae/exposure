@@ -8,6 +8,23 @@ from .services import get_store, get_user, get_product, get_users_bulk, get_prod
 from .models import Post, Review
 from .serializers import PostSerializer, ReviewSerializer
 
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def user(request,id):
+    user_data = get_user(id)
+    if user_data is None:
+        return Response({"error": "User not found"}, status=404)
+    return Response(user_data)
+
+########################################
+from django.http import JsonResponse
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({"status": "ok"})
+
+
+
 ########################### Posts ######################################
 
 @api_view(["POST"])
