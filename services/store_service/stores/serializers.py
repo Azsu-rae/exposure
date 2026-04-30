@@ -3,15 +3,14 @@ from .models import Order, OrderItem, Store, Product
 
 
 class StoreSerializer(serializers.ModelSerializer):
+    seller = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Store
         fields = [
-            "seller", "name", "description",  # "logo",
+            "id", "seller", "name", "description",
             "wilaya", "city", "created_at",
-            # ...
-            "is_active",
-            # ...
-            "rating", "ccp"
+            "is_active", "rating", "ccp"
         ]
 
 

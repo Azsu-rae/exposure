@@ -1,9 +1,10 @@
 #! /bin/bash
 
-DB="store_service"
+DB="user_service"
 
 source .env
 export PGPASSWORD="$DB_PASSWORD"
+echo "$PGPASSWORD"
 
 psql -U asura -d postgres -h localhost -p 5432 -c "DROP DATABASE IF EXISTS $DB WITH (FORCE);"
 psql -U asura -d postgres -h localhost -p 5432 -c "CREATE DATABASE $DB;"

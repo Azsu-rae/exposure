@@ -16,7 +16,7 @@ class Delivery(models.Model):
     coupling between services
     """
 
-    order_id = models.IntegerField()
+    order_id = models.UUIDField()
     driver = models.ForeignKey('Driver', on_delete=models.CASCADE)
     company = models.ForeignKey('DeliveryCompany', on_delete=models.CASCADE)
     delivery_arrival_address = models.CharField(max_length=255)

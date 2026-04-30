@@ -1,51 +1,60 @@
-from stores.serializers import OrderSerializer, ProductSerializer
+from rest_framework import viewsets, mixins
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+
+from django.shortcuts import get_object_or_404
+
+from stores.serializers import OrderSerializer, ProductSerializer, StoreSerializer
 from stores.models import Order, OrderItem, Product, Store
 from stores.permissions import IsBuyer, IsSeller
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
 
+class StoreViewSet(viewsets.ModelViewSet):
+    serializer_class = StoreSerializer
 
-class ProductsView(APIView):
+    def get_queryset(self):
+        return Store.objects.all()
 
     def get_permissions(self):
-        if self.request.method == 'POST':
-            return [IsSeller()]
-        return [IsBuyer()]
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return [IsAuthenticated()]
+        return [IsSeller()]
 
-    def get(self, request):
-        products = Product.objects.filter(is_blocked=False)
-        return Response(ProductSerializer(products, many=True).data)
+    def perform_create(self, serializer):
+        serializer.save(seller=self.request.user.id)
 
-    def post(self, request):
-        try:
-            store = Store.objects.get(id=request.data.get('store_id'), seller=request.user.id)
-        except Store.DoesNotExist:
-            return Response({"error": "Store not found or does not belong to you."}, status=404)
 
-        serializer = ProductSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=400)
+class ProductViewSet(viewsets.ModelViewSet):
+    serializer_class = ProductSerializer
 
+    def get_queryset(self):
+        return Product.objects.filter(is_blocked=False)
+
+    def get_permissions(self):
+        if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
+            return [IsBuyer()]
+        return [IsSeller()]
+
+    def perform_create(self, serializer):
+        store = get_object_or_404(Store, id=self.request.data.get('store_id'), seller=self.request.user.id)
         serializer.save(store=store)
-        return Response(serializer.data, status=201)
 
 
-class OrdersView(APIView):
+class OrderViewSet(mixins.CreateModelMixin,
+                   mixins.ListModelMixin,
+                   mixins.RetrieveModelMixin,
+                   viewsets.GenericViewSet):
+    serializer_class = OrderSerializer
+    permission_classes = [IsBuyer]
 
-    def get_permissions(self):
-        return [IsBuyer()]
+    def get_queryset(self):
+        return Order.objects.filter(user=self.request.user.id)
 
-    def get(self, request):
-        orders = Order.objects.filter(user=request.user.id)
-        return Response(OrderSerializer(orders, many=True).data)
-
-    def post(self, request):
+    def create(self, request, *args, **kwargs):
         items_data = request.data.get('items', [])
         if not items_data:
             return Response({"error": "No items provided."}, status=400)
 
-        # validate stock before creating anything
         for item in items_data:
             try:
                 product = Product.objects.get(id=item['product_id'], is_blocked=False)

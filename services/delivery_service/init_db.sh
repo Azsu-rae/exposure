@@ -1,6 +1,6 @@
 #! /bin/bash
 
-DB="store_service"
+DB="delivery_service"
 
 source .env
 export PGPASSWORD="$DB_PASSWORD"
