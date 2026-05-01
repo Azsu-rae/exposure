@@ -1,12 +1,27 @@
 from django.urls import path
-from . import views
+from .views import (
+    create_post, post_detail, delete_post,
+    feed, search_posts, page_detail,
+    create_review, delete_review, health, user)
 
 urlpatterns = [
-    # path("api/page/<int:page_id>/", views.page_api),
-    # path("api/post/<int:post_id>/", views.post_api),
+    # users
+    path("users/<int:id>/", user),
+    # health
+    path("health/", health),
+    # 🔵 POSTS
+    path("posts/create/", create_post),
+    path("posts/<int:post_id>/", post_detail),
+    path("posts/<int:post_id>/delete/", delete_post),
 
-    path("page/<int:page_id>/", views.page_view, name="page"),
-    path("post/<int:post_id>/", views.post_detail, name="post_detail"),
-    # path('index/<int:x>',views.index)
+    # 🔵 FEED + SEARCH
+    path("feed/", feed),
+    path("search/", search_posts),
+
+    # 🔵 PAGES (STORE)
+    path("pages/<int:store_id>/", page_detail),
+
+    # 🔵 REVIEWS
+    path("reviews/create/", create_review),
+    path("reviews/<int:review_id>/delete/", delete_review),
 ]
-
