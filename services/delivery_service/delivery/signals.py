@@ -1,5 +1,7 @@
-from django.db.models.signals import pre_save, post_save
+from django.db import transaction
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
+
 from delivery.models import Delivery
 
 
@@ -16,6 +18,7 @@ def track_previous_status(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Delivery)
 def on_delivery_status_changed(sender, instance, created, **kwargs):
-    if not created and instance.delivery_status != getattr(instance, '_previous_status', None):
-        from delivery.messaging import publish_delivery_status_changed
-        publish_delivery_status_changed(instance)
+    if created or instance.delivery_status == getattr(instance, '_previous_status', None):
+        return
+    from delivery.messaging import publish_delivery_status_changed
+    transaction.on_commit(lambda: publish_delivery_status_changed(instance))

@@ -147,10 +147,9 @@ def delete_account(request):
 
 
 @api_view(["GET"])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def lookup_user(request):
     username = request.query_params.get("username")
-    print(f"looking up {username}...")
     if not username:
         return Response({"error": "username query param required."}, status=400)
     try:

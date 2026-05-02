@@ -1,8 +1,15 @@
 import json
 import os
+
 import pika
 
 EXCHANGE = 'exposure'
+QUEUE = 'delivery_service_queue'
+
+_BINDINGS = (
+    'order.created',
+)
+
 RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
 
 
@@ -18,7 +25,7 @@ def publish(routing_key, payload):
     channel.basic_publish(
         exchange=EXCHANGE,
         routing_key=routing_key,
-        body=json.dumps(payload),
+        body=json.dumps(payload, default=str),
         properties=pika.BasicProperties(delivery_mode=2),
     )
     connection.close()
@@ -34,16 +41,32 @@ def publish_delivery_status_changed(delivery):
 
 
 def _handle_order_created(ch, method, properties, body):
+    """Project order.created into a PENDING Delivery row.
+
+    Driver/company are left null until a dispatcher assigns one. This is
+    the projection of "an order needs shipping" — Delivery still owns its
+    own lifecycle from here on.
+    """
+    from delivery.models import Delivery
+
     data = json.loads(body)
-    print(f"[delivery] order.created received: order_id={data.get('order_id')} user_id={data.get('user_id')}")
+    order_id = data['order_id']
+    address = data.get('shipping_address') or ''
+
+    Delivery.objects.get_or_create(
+        order_id=order_id,
+        defaults={'delivery_arrival_address': address},
+    )
+    print(f"[delivery] Delivery created for order {order_id}")
     ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def start_consumer():
     connection, channel = _channel()
-    channel.queue_declare(queue='delivery_service_queue', durable=True)
-    channel.queue_bind(exchange=EXCHANGE, queue='delivery_service_queue', routing_key='order.created')
+    channel.queue_declare(queue=QUEUE, durable=True)
+    for routing_key in _BINDINGS:
+        channel.queue_bind(exchange=EXCHANGE, queue=QUEUE, routing_key=routing_key)
     channel.basic_qos(prefetch_count=1)
-    channel.basic_consume(queue='delivery_service_queue', on_message_callback=_handle_order_created)
+    channel.basic_consume(queue=QUEUE, on_message_callback=_handle_order_created)
     print('[delivery] Waiting for events...')
     channel.start_consuming()

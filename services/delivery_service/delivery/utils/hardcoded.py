@@ -1,4 +1,6 @@
+import uuid
 from datetime import timedelta
+
 from django.utils import timezone
 
 
@@ -24,14 +26,15 @@ SAMPLE_COMPANIES = [
         "address": "789 Commerce Blvd"},
 ]
 
+# Deterministic UUIDs so the sample data is repeatable across init_db runs.
 SAMPLE_DELIVERIES = [
-    {"order_id": 1001, "delivery_arrival_address": "321 Oak St, Downtown"},
-    {"order_id": 1002, "delivery_arrival_address": "654 Pine Ave, Westside"},
-    {"order_id": 1003, "delivery_arrival_address": "987 Maple Dr, Eastside"},
-    {"order_id": 1004, "delivery_arrival_address": "147 Cedar Ln, Northgate"},
-    {"order_id": 1005, "delivery_arrival_address": "258 Birch Ct, Southport"},
-    {"order_id": 1006, "delivery_arrival_address": "369 Elm St, Downtown"},
-    {"order_id": 1007, "delivery_arrival_address": "741 Willow Way, Westside"},
+    {"order_id": uuid.UUID(int=1001), "delivery_arrival_address": "321 Oak St, Downtown"},
+    {"order_id": uuid.UUID(int=1002), "delivery_arrival_address": "654 Pine Ave, Westside"},
+    {"order_id": uuid.UUID(int=1003), "delivery_arrival_address": "987 Maple Dr, Eastside"},
+    {"order_id": uuid.UUID(int=1004), "delivery_arrival_address": "147 Cedar Ln, Northgate"},
+    {"order_id": uuid.UUID(int=1005), "delivery_arrival_address": "258 Birch Ct, Southport"},
+    {"order_id": uuid.UUID(int=1006), "delivery_arrival_address": "369 Elm St, Downtown"},
+    {"order_id": uuid.UUID(int=1007), "delivery_arrival_address": "741 Willow Way, Westside"},
 ]
 
 

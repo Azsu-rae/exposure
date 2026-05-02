@@ -1,14 +1,11 @@
-
 django
 django-filter
 djangorestframework
 
-requests
 django-environ
 djangorestframework-simplejwt
 
 Pillow
-chargily-pay
 psycopg2-binary
 
 gunicorn

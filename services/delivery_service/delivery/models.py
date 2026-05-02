@@ -16,17 +16,17 @@ class Delivery(models.Model):
     coupling between services
     """
 
-    order_id = models.UUIDField()
-    driver = models.ForeignKey('Driver', on_delete=models.CASCADE)
-    company = models.ForeignKey('DeliveryCompany', on_delete=models.CASCADE)
-    delivery_arrival_address = models.CharField(max_length=255)
+    order_id = models.UUIDField(unique=True)
+    driver = models.ForeignKey('Driver', on_delete=models.SET_NULL, null=True, blank=True)
+    company = models.ForeignKey('DeliveryCompany', on_delete=models.SET_NULL, null=True, blank=True)
+    delivery_arrival_address = models.CharField(max_length=255, blank=True)
     delivery_status = models.CharField(
         max_length=50,
         choices=DeliveryStatus.choices,
         default=DeliveryStatus.PENDING
     )
     updated_at = models.DateTimeField(auto_now=True)
-    estimated_delivery_time = models.DateTimeField()
+    estimated_delivery_time = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"Delivery {self.pk} for Order {self.order_id}"

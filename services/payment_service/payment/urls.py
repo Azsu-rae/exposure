@@ -1,13 +1,11 @@
+from django.urls import include, path
+from rest_framework import routers
 
-from django.urls import path
-from . import views
+from .views import PaymentViewSet
+
+router = routers.DefaultRouter()
+router.register(r'payments', PaymentViewSet, basename='payment')
 
 urlpatterns = [
-    path("payments/",                                    views.payment_list),
-    path("payments/create/",                             views.create_payment),
-    path("payments/webhook/",                            views.chargily_webhook),
-    path("payments/<int:payment_id>/confirm-delivery/",  views.confirm_delivery),
+    path('', include(router.urls)),
 ]
-
-# path('<int:payment_id>/release/', release_payment),
-    # path('<int:payment_id>/refund/', request_refund),

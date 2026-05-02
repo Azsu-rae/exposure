@@ -1,149 +1,62 @@
-import json
-
-from django.http import HttpResponse
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-
+from rest_framework import viewsets, mixins
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import api_view, permission_classes
 
 from .models import Payment
-from .services import create_checkout, client
 from .serializers import PaymentCreateSerializer, PaymentSerializer
-from users.permissions import IsBuyer, IsDelivery
-
-# 📊 LIST PAYMENTS
-
-
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
-def payment_list(request):
-    payments = Payment.objects.all()
-    serializer = PaymentSerializer(payments, many=True)
-    return Response(serializer.data)
+from .simulator import process_new_payment
+from .permissions import IsBuyer, IsDelivery
 
 
-# 💳 CREATE PAYMENT
+class PaymentViewSet(mixins.ListModelMixin,
+                     mixins.RetrieveModelMixin,
+                     viewsets.GenericViewSet):
+    serializer_class = PaymentSerializer
 
-@api_view(["POST"])
-@permission_classes([IsBuyer])
-def create_payment(request):
-    serializer = PaymentCreateSerializer(data=request.data)
-    if not serializer.is_valid():
-        return Response(serializer.errors, status=400)
+    def get_queryset(self):
+        user = self.request.user
+        qs = Payment.objects.all().order_by('-created_at')
+        if user.role == 'BUYER':
+            return qs.filter(buyer_id=user.id)
+        if user.role == 'SELLER':
+            return qs.filter(seller_id=user.id)
+        return qs
 
-    validated = serializer.validated_data
-    order_id = validated["order_id"]
-    amount = validated["amount"]
-    method = validated["method"]
+    def get_permissions(self):
+        if self.action == 'create_payment':
+            return [IsBuyer()]
+        if self.action == 'mark_collected':
+            return [IsDelivery()]
+        return [IsAuthenticated()]
 
-    # ... rest of your logic unchanged
-    if not order_id or not amount:
-        return Response({"error": "order_id and amount are required"}, status=400)
+    @action(detail=False, methods=['post'], url_path='create')
+    def create_payment(self, request):
+        serializer = PaymentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
 
-    if method not in ("CASH", "CARD"):
-        return Response({"error": "method must be CASH or CARD"}, status=400)
+        if Payment.objects.filter(order_id=data['order_id']).exists():
+            return Response({'error': 'Payment already exists for this order.'}, status=400)
 
-    # 💵 CASH — no Chargily, confirmed on delivery
-    if method == "CASH":
         payment = Payment.objects.create(
-            order_id=order_id,
-            amount=amount,
-            method="CASH",
-            status="PENDING",
+            order_id=data['order_id'],
+            seller_id=data['seller_id'],
+            buyer_id=request.user.id,
+            amount=data['amount'],
+            method=data['method'],
         )
-        return Response({
-            "message": "Cash payment registered. Confirm on delivery.",
-            "payment_id": payment.id,
-            "status": payment.status,
-        })
+        payment = process_new_payment(payment)
+        return Response(PaymentSerializer(payment).data, status=201)
 
-    # 💳 CARD — redirect to Chargily checkout
-    payment = Payment.objects.create(
-        order_id=order_id,
-        amount=amount,
-        method="CARD",
-        status="PENDING",
-    )
-    payment = create_checkout(payment)
-    return Response({
-        "checkout_url": payment.checkout_url,
-        "status": payment.status,
-    })
-
-
-# 🚚 CONFIRM DELIVERY (triggers escrow release or refund)
-@api_view(["POST"])
-@permission_classes([IsDelivery])
-def confirm_delivery(request, payment_id):
-    try:
-        payment = Payment.objects.get(id=payment_id)
-    except Payment.DoesNotExist:
-        return Response({"error": "Payment not found"}, status=404)
-
-    delivered = request.data.get("delivered")
-    returned = request.data.get("returned")
-
-    # CASH payments are PENDING until delivery — allow release from PENDING too
-    if payment.status not in ("HELD", "PENDING"):
-        return Response(
-            {"error": f"Cannot confirm delivery for a payment with status: {payment.status}"},
-            status=400
-        )
-
-    # Cash payments that are PENDING should only be released, not refunded here
-    # (refund only makes sense after money was actually collected)
-    if payment.method == "CASH" and payment.status == "PENDING" and returned:
-        return Response(
-            {"error": "Cash payment was never collected — nothing to refund"},
-            status=400
-        )
-
-    if delivered and not returned:
-        payment.status = "RELEASED"
-        payment.release_date = timezone.now()
-        payment.save()
-        return Response({"message": "Money released to seller"})
-
-    if returned:
-        payment.status = "REFUNDED"
-        payment.save()
-        return Response({"message": "Refunded to buyer"})
-
-    return Response({"message": "Waiting for confirmation"})
-
-
-# 🔔 CHARGILY WEBHOOK
-@csrf_exempt
-def chargily_webhook(request):
-    signature = request.headers.get("signature")
-    payload = request.body.decode("utf-8")
-
-    if not signature:
-        return HttpResponse(status=400)
-
-    if not client.validate_signature(signature, payload):
-        return HttpResponse(status=403)
-
-    event = json.loads(payload)
-    checkout_id = event["data"]["id"]
-    event_type = event["type"]
-
-    payment = Payment.objects.filter(entity_id=checkout_id).first()
-    if not payment:
-        return HttpResponse(status=404)
-
-    # Prevent processing the same webhook twice
-    if payment.status != "PENDING":
-        return HttpResponse(status=200)
-
-    if event_type == "checkout.paid":
-        payment.status = "HELD"  # escrow begins here
-        payment.save()
-
-    elif event_type == "checkout.failed":
-        payment.status = "FAILED"
-        payment.save()
-
-    return HttpResponse(status=200)
+    @action(detail=True, methods=['post'], url_path='mark-collected')
+    def mark_collected(self, request, pk=None):
+        """Cash-on-delivery confirmation by the courier. Flips PENDING→HELD."""
+        payment = self.get_object()
+        if payment.method != Payment.Method.CASH:
+            return Response({'error': 'Only cash payments can be marked collected.'}, status=400)
+        if payment.status != Payment.Status.PENDING:
+            return Response({'error': f'Payment is in {payment.status}, cannot mark collected.'}, status=400)
+        payment.status = Payment.Status.HELD
+        payment.save(update_fields=['status'])
+        return Response(PaymentSerializer(payment).data)

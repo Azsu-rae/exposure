@@ -20,7 +20,6 @@ import time
 import logging
 from datetime import timedelta
 from django.utils import timezone
-from . import payment_webhook as pw
 from .models import Delivery
 
 # obserever or logger for simulation(delivery) progress and status messages
@@ -123,9 +122,8 @@ def simulate_delivery(delivery: Delivery, step_min: int = 60, step_max: int = 12
 
         delivery.save(
             update_fields=["delivery_status", "updated_at", "estimated_delivery_time"])
-        if status != Delivery.DeliveryStatus.DELIVERED and status != Delivery.DeliveryStatus.CANCELLED:
-            # Notify payment service on each status change
-            pw.notify_payment(delivery)
+        # Status changes are emitted to RabbitMQ via the post_save signal —
+        # payment_service consumes 'delivery.status_changed' and flips escrow.
         logger.info(f"Delivery #{delivery.pk} → {label}: {message}")
 
         # Occasionally add a hiccup message (30% chance)
@@ -136,8 +134,6 @@ def simulate_delivery(delivery: Delivery, step_min: int = 60, step_max: int = 12
         # Stop after delivered
         if status == Delivery.DeliveryStatus.DELIVERED or status == Delivery.DeliveryStatus.CANCELLED:
             logger.info(f"Delivery #{delivery.pk}, simulation complete.")
-            # Notify payment service on final status
-            pw.notify_payment(delivery)
             break
 
         # Wait before next stage
