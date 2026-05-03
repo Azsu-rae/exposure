@@ -2,6 +2,12 @@ from django.db import models
 
 
 class Post(models.Model):
+
+    class ModerationStatus(models.TextChoices):
+        PENDING = 'PENDING'
+        APPROVED = 'APPROVED'
+        REJECTED = 'REJECTED'
+
     store_id = models.IntegerField(db_index=True)
     product_id = models.IntegerField(db_index=True)
     image = models.ImageField(upload_to="posts_images/", null=True, blank=True)
@@ -9,6 +15,14 @@ class Post(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+    moderation_status = models.CharField(
+        max_length=10,
+        choices=ModerationStatus.choices,
+        default=ModerationStatus.PENDING,
+        db_index=True,
+    )
+    moderation_reason = models.TextField(blank=True)
 
 
 class Review(models.Model):

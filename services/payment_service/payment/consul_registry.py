@@ -26,10 +26,9 @@ def register_service():
         "Port": SERVICE_PORT,
         "Tags": [
             "traefik.enable=true",
-            # CORRECT: Changed 'social' to 'ur service name' to keep router names unique
-            f"traefik.http.routers.{
-                SERVICE_NAME}.rule=PathPrefix(`/{SERVICE_NAME}`)",
-            f"traefik.http.routers.{SERVICE_NAME}.entrypoints=web"
+            "traefik.http.routers.payment.rule="
+            "PathPrefix(`/api/payments`) || PathPrefix(`/api/payment`)",
+            "traefik.http.routers.payment.entrypoints=web",
         ],
         "Check": {
             "HTTP": f"http://{hostname}:{SERVICE_PORT}/api/{SERVICE_NAME}/health/",

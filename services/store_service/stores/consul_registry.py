@@ -1,15 +1,14 @@
-
 import requests
 import socket
 import os
 
-import user_service.settings as settings
+import store_service.settings as settings
 
 # Ideally, point this to your local Consul agent (e.g., http://localhost:8500 or http://consul:8500)
 # Using ngrok for the agent URL can cause latency or health check issues.
 CONSUL_URL = settings.env("CONSUL_URL", default="http://localhost:8500")
 
-SERVICE_NAME = "users"
+SERVICE_NAME = "store"
 SERVICE_PORT = int(settings.env("PORT", default="8000"))
 
 
@@ -27,10 +26,10 @@ def register_service():
         "Port": SERVICE_PORT,
         "Tags": [
             "traefik.enable=true",
-            "traefik.http.routers.users.rule="
-            "PathPrefix(`/api/users`) || PathPrefix(`/api/profile`) || "
-            "PathPrefix(`/api/lookup`) || PathPrefix(`/api/internal`)",
-            "traefik.http.routers.users.entrypoints=web",
+            "traefik.http.routers.store.rule="
+            "PathPrefix(`/api/stores`) || PathPrefix(`/api/products`) || "
+            "PathPrefix(`/api/orders`) || PathPrefix(`/api/store`)",
+            "traefik.http.routers.store.entrypoints=web",
         ],
         "Check": {
             "HTTP": f"http://{hostname}:{SERVICE_PORT}/api/{SERVICE_NAME}/health/",

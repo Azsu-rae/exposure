@@ -20,8 +20,8 @@ def on_store_deleted(sender, instance, **kwargs):
     store_id = instance.id
     transaction.on_commit(lambda: publish_store_deleted(store_id))
 
-
 # --- Products -----------------------------------------------------------
+
 
 @receiver(post_save, sender=Product)
 def on_product_saved(sender, instance, created, **kwargs):

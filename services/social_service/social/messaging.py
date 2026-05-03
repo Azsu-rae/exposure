@@ -1,3 +1,4 @@
+import base64
 import json
 import os
 
@@ -8,11 +9,13 @@ from .models import UserRef, StoreRef, ProductRef
 EXCHANGE = 'exposure'
 QUEUE = 'social_service_queue'
 
-# Read model: subscribe to anything that changes the entities we display.
+# Read model: subscribe to anything that changes the entities we display,
+# plus the verdicts coming back from the moderation service.
 _BINDINGS = (
     'user.created', 'user.updated', 'user.deleted',
     'store.created', 'store.updated', 'store.deleted',
     'product.created', 'product.updated', 'product.deleted',
+    'image.moderation.completed',
 )
 
 RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
@@ -23,6 +26,37 @@ def _channel():
     channel = connection.channel()
     channel.exchange_declare(exchange=EXCHANGE, exchange_type='topic', durable=True)
     return connection, channel
+
+
+# --- Producers ----------------------------------------------------------
+
+def publish(routing_key, payload):
+    connection, channel = _channel()
+    channel.basic_publish(
+        exchange=EXCHANGE,
+        routing_key=routing_key,
+        body=json.dumps(payload, default=str),
+        properties=pika.BasicProperties(delivery_mode=2),
+    )
+    connection.close()
+
+
+def publish_image_moderation_requested(post_id, image_bytes, content_type='', filename=''):
+    """
+    Ask the moderation service to scan a post's image.
+
+    The image bytes travel inside the message itself (base64-encoded), so
+    the producer and consumer don't have to share a filesystem. Trade-off:
+    the broker carries the payload, so keep an eye on message size if you
+    ever accept big uploads. Swap to an object-store reference (S3 key,
+    signed URL) once that becomes a problem.
+    """
+    publish('image.moderation.requested', {
+        'post_id': post_id,
+        'image_b64': base64.b64encode(image_bytes).decode('ascii'),
+        'content_type': content_type,
+        'filename': filename,
+    })
 
 
 # --- Handlers -----------------------------------------------------------
@@ -62,6 +96,25 @@ def _upsert_product(data):
     )
 
 
+def _apply_moderation_verdict(data):
+    from .models import Post
+    post_id = data.get('post_id')
+    approved = data.get('approved', True)
+    reason = data.get('reason', '')
+    new_status = (
+        Post.ModerationStatus.APPROVED if approved
+        else Post.ModerationStatus.REJECTED
+    )
+    updated = Post.objects.filter(id=post_id).update(
+        moderation_status=new_status,
+        moderation_reason=reason,
+    )
+    if updated:
+        print(f'[social] post {post_id} -> {new_status} ({reason!r})')
+    else:
+        print(f'[social] moderation verdict for unknown post {post_id}')
+
+
 def _on_message(ch, method, properties, body):
     routing_key = method.routing_key
     try:
@@ -78,6 +131,8 @@ def _on_message(ch, method, properties, body):
             _upsert_product(data)
         elif routing_key == 'product.deleted':
             ProductRef.objects.filter(id=data['product_id']).delete()
+        elif routing_key == 'image.moderation.completed':
+            _apply_moderation_verdict(data)
         ch.basic_ack(delivery_tag=method.delivery_tag)
     except Exception as e:
         # Reject without requeue so a poison message doesn't loop forever.

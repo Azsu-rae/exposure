@@ -1,23 +1,80 @@
 \documentclass[11pt,a4paper]{article}
 \usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage{babel}
 \usepackage{geometry}
-\usepackage{tikz}
-\usetikzlibrary{arrows.meta,positioning}
+\usepackage{verbatim}
+\usepackage{xcolor}
+\usepackage{listings}
+
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\small,
+    showstringspaces=false,
+    breaklines=true,
+    morestring=[b]",
+    stringstyle=\color{green!50!black},
+    literate=
+      {true}{{{\color{blue}true}}}{4}
+      {false}{{{\color{blue}false}}}{5}
+}
+
 \geometry{margin=2.2cm}
 
-\title{Rapport technique court\\Architecture et infrastructure}
-\author{}
-\date{}
-
 \begin{document}
-\maketitle
+
+\begin{titlepage}
+    \centering
+    \vspace*{1cm}
+
+    {\Large \textbf{UNIVERSITÉ M'HAMED BOUGARA DE BOUMERDÈS}}\\[0.5cm]
+    {\large Faculté des Sciences --- Département d'Informatique}\\[0.2cm]
+    {\large Master 1 I2A --- Semestre 2 --- Matière : WAMS}\\[2.5cm]
+
+    \hrule
+    \vspace{0.8cm}
+    {\Huge \textbf{RAPPORT TECHNIQUE}}\\[0.8cm]
+    {\Large Plateforme E-Commerce Inspier d'un Resaux Social avec une architecture Microservices et une Modération par Intelligence Artificielle}
+    \vspace{0.8cm}
+    \hrule
+
+    \vspace{3cm}
+
+    \begin{flushleft}
+        \Large \textbf{Réalisé par :}\\[0.5cm]
+        \large
+        Groupe --- Master 1 I2A --- Promotion 2025/2026\\[0.3cm]
+        Khouri Anes\\
+        Tamer Niati\\
+        Ridha Laribi\\
+        Ilyas Ait Ameur\\
+        Katem Amine
+    \end{flushleft}
+
+    \vfill
+
+    {\Large \textbf{Année Universitaire : 2025 / 2026}}
+
+    \vspace*{1cm}
+\end{titlepage}
 
 \section{Introduction}
-Ce projet est un backend pour une plateforme e-commerce proche d'un r\'eseau social. 
-Il g\`ere des fonctions logistiques importantes: paiements, livraisons, catalogue produit et stock.
-L'architecture suit un mod\`ele microservices: chaque service est s\'epar\'e selon une responsabilit\'e m\'etier claire.
+Ce projet est une plateforme e-commerce proche d'un r\'eseau social.
+Elle g\`ere des fonctions logistiques importantes: paiements, livraisons, catalogue produit et stock.
+L'architecture suit un mod\`ele microservices: \textbf{chaque service est s\'epar\'e selon une responsabilit\'e m\'etier claire.}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{|l|p{10cm}|}
+\hline
+\textbf{Microservice} & \textbf{Responsabilité} \\ \hline
+\texttt{store\_service} & Gestion des boutiques, du catalogue de produits et des stocks. \\ \hline
+\texttt{payment\_service} & Traitement des transactions et validation des paiements. \\ \hline
+\texttt{delivery\_service} & Gestion logistique, suivi des expéditions et livraisons. \\ \hline
+\texttt{social\_service} & Fonctionnalités sociales (commentaires, likes, messagerie, etc.). \\ \hline
+\texttt{auth\_service} & Gestion de utilisateurs, des profils et des rôles (acheteur, vendeur) ansi que l'authentification et émission des tokens JWT. \\ \hline
+\end{tabular}
+\caption{Détail des microservices}
+\label{tab:microservices}
+\end{table}
 
 \section{Architecture et infrastructure}
 
@@ -26,6 +83,7 @@ Chaque microservice expose une API REST.
 Cette API permet aux autres services et aux clients d'appeler les fonctionnalit\'es de mani\`ere standard (HTTP + JSON).
 Le d\'ecoupage par service garde le code plus simple \`a maintenir et \`a faire \'evoluer.
 
+\textbf{Chaque microservice possède sa propre base de données isolée.} Les microservices ne peuvent interagir entre eux que par le biais de leurs endpoints REST respectifs ou par messagerie asynchrone. Cette isolation garantit un couplage lâche, prévient les pannes en cascade et permet de faire évoluer le schéma de données de chaque service de manière indépendante.
 \subsection{2. Authentification}
 L'authentification repose sur des tokens JWT.
 Un token contient des \textit{claims} (par exemple l'identit\'e utilisateur, le r\^ole, la dur\'ee de validit\'e).
@@ -38,7 +96,135 @@ Le syst\`eme utilise:
 La signature est v\'erifi\'ee localement dans chaque service avec des cl\'es RS256.
 Donc, un service n'a pas besoin d'appeler le service d'auth \`a chaque requ\^ete pour valider un token.
 
+Un token JWT est composé de trois parties séparées par des points (\texttt{.}):
+
+\[ \texttt{xxxxx.yyyyy.zzzzz} \]
+
+\begin{itemize}
+  \item \textbf{Header} (\texttt{xxxxx}): Contient le type de token et l'algorithme de signature (ex: RS256).
+  \item \textbf{Payload} (\texttt{yyyyy}): Contient les \textit{claims} (données de l'utilisateur, rôles, etc.).
+  \item \textbf{Signature} (\texttt{zzzzz}): Permet de vérifier que le token n'a pas été altéré.
+\end{itemize}
+
+Voici un exemple concret d'un token généré par l'application pour un utilisateur :
+
+\newpage
+
+\vspace{0.3cm}
+\noindent\textbf{1. Encoded Token (JWT)}
+\begin{flushleft}
+\ttfamily\small
+\textcolor{orange}{eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9}.\textcolor{violet}{eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwi\\
+ZXhwIjoxNzc3ODIwMzQ2LCJpYXQiOjE3Nzc4MjAwNDYsImp0aSI6IjM4OTE5ZGYxMDJkZ\\
+jQ1NWFhODIxNzRiOGQ0YzRmMjk2IiwidXNlcl9pZCI6IjEiLCJ1c2VybmFtZSI6ImFiZG\\
+VsbGFvdWlfbW9oYW1lZCIsImVtYWlsIjoiYWJkZWxsYW91aS5tb2hhbW1lZC4yMDAyQGd\\
+tYWlsLmNvbSIsInJvbGUiOiJCVVlFUiIsImlzX2FjdGl2ZSI6dHJ1ZX0}.\textcolor{teal}{O1yiglWcVLvr\\
+ldM3auxRPAlMWYosJMQKjgTGZVDgV68W35Cxx05iFsvfQgcPoziOlR07LCBm5WJnAdzOi\\
+7gaeIFZUKksZ0TQeoIHmrB9Aems9GjKlL9s\_PvObmytGcljOqKeU6f7YKmI-UtR8YOB9r\\
+h5RbTjrVrqU3ULri95ZV0HzOebaOoyfiGymtNg7JMpaFvDitdOrdTVc19yd9NMPbDmCM7\\
+Px4hv6bIaR2s8X\_CfTTlZrJ8RR8DDd0yee9hHx0-EytFgaI6gwcfpGoOR37J5bk13BLRg\\
+MJs7jvpWBVpB5\_mBZqcpns2QUUcRjIlxhsTcpW-FXn8l85KsXZnlKA}
+\end{flushleft}
+
+\noindent\textbf{2. Decoded Header} \\
+Contient le type de token et l'algorithme de signature utilisé (\texttt{RS256}) :
+\begin{lstlisting}[language=json]
+{
+  "alg": "RS256",
+  "typ": "JWT"
+}
+\end{lstlisting}
+
+\noindent\textbf{3. Decoded Payload (Claims Breakdown)} \\
+Contient les données (claims) de l'utilisateur, comme son identifiant, son email et son rôle :
+\begin{lstlisting}[language=json]
+{
+  "token_type": "access",
+  "exp": 1777820346,
+  "iat": 1777820046,
+  "jti": "38919df102df455aa82174b8d4c4f296",
+  "user_id": "1",
+  "username": "abdellaoui_mohamed",
+  "email": "abdellaoui.mohammed.2002@gmail.com",
+  "role": "BUYER",
+  "is_active": true
+}
+\end{lstlisting}
+
+\noindent\textbf{4. JWT Signature Verification (Public Key)} \\
+La signature garantit que le token n'a pas été altéré. Au lieu d'interroger le service d'authentification à chaque requête, chaque microservice vérifie localement cette signature à l'aide de la clé publique au format PEM :
+\begin{verbatim}
+-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA...
+... (clé publique partagée) ...
+XL1Oe1s4jbkF2G9034Iqri1ZwqxGbMV1xhtdCxHHxPemL9wpRYKVXlb2wJYPzR0o
+8QIDAQAB
+-----END PUBLIC KEY-----
+\end{verbatim}
+
+Pour l'authentification inter-services (cross-service), le système ne s'appuie pas nécessairement sur les tokens utilisateurs. Il utilise un secret interne partagé (\texttt{INTERNAL\_API\_SECRET}). Les requêtes entre microservices incluent ce secret en en-tête, permettant aux services de s'authentifier mutuellement de manière rapide et sécurisée sans dépendre d'un JWT externe.
+
 \subsection{3. Coh\'erence d'\'etat avec RabbitMQ}
+
+Les modèles \texttt{UserRef}, \texttt{StoreRef} et \texttt{ProductRef} (dans \texttt{social/models.py}) sont des projections locales en lecture seule de données appartenant à d'autres services. Le schéma de fonctionnement est le suivant :
+
+\begin{itemize}
+  \item \textbf{Source de vérité :} \texttt{user\_service} possède les utilisateurs, \texttt{store\_service} possède les boutiques et les produits. Chaque service écrit dans sa propre base de données.
+  \item \textbf{Événements :} lorsqu'un changement survient, le service propriétaire publie un événement sur RabbitMQ (\texttt{user.created}, \texttt{store.updated}, \texttt{product.deleted}, etc.).
+  \item \textbf{Consommateur :} \texttt{social\_service} exécute un processus consommateur qui s'abonne à ces événements et met à jour ses tables locales \texttt{UserRef}, \texttt{StoreRef} et \texttt{ProductRef}.
+  \item \textbf{Lectures :} lorsque l'API doit afficher une publication avec son produit, sa boutique et son auteur, elle effectue une jointure locale sur ces références au lieu de faire des requêtes HTTP synchrones vers \texttt{user\_service} ou \texttt{store\_service}.
+\end{itemize}
+
+Le contrat de ces modèles est clairement défini :
+\begin{quote}
+\textit{Ces tables sont alimentées par les consommateurs RabbitMQ à partir des événements de \texttt{user\_service} et \texttt{store\_service}. Ce sont des projections dénormalisées de la source de vérité — elles ne sont jamais modifiées directement par la logique métier de \texttt{social\_service}.}
+\end{quote}
+
+\textbf{Pourquoi cette conception ?}
+\begin{enumerate}
+  \item \textbf{Pas de requêtes HTTP synchrones sur le chemin critique :} L'affichage d'un flux d'actualités ne nécessite pas d'appels réseau en cascade. C'est plus rapide et résilient : si \texttt{user\_service} est hors ligne, le flux s'affiche toujours avec le dernier nom d'utilisateur connu.
+  \item \textbf{Structure sur mesure :} \texttt{StoreRef} ne stocke que les colonnes utiles pour le service social (nom, wilaya, ville, note), sans répliquer l'intégralité de l'enregistrement original.
+  \item \textbf{Découplage :} \texttt{social\_service} peut être déployé, mis à l'échelle et interrogé même si les services en amont sont indisponibles, tant que RabbitMQ a délivré les événements.
+\end{enumerate}
+
+\textbf{Compromis (Trade-offs) :}
+\begin{itemize}
+  \item \textbf{Cohérence à terme (Eventual consistency) :} Si un nom d'utilisateur change, il y a un court instant de latence où l'ancien nom est affiché jusqu'à ce que l'événement soit consommé.
+  \item \textbf{Problème de démarrage à froid :} Une base de données vierge pour \texttt{social\_service} a des références vides jusqu'à ce que les événements arrivent. Le système repose sur la circulation continue des événements.
+  \item \textbf{Risque de dérive de schéma :} Si \texttt{store\_service} ajoute un champ dont le service social a besoin, la structure de l'événement et le modèle \texttt{StoreRef} doivent être mis à jour de concert.
+\end{itemize}
+
+Il s'agit d'une implémentation classique du modèle \textbf{CQRS / Event-Sourced Read Model} : les écritures vont au service propriétaire, tandis que les lectures sont servies depuis une projection locale construite par la consommation du flux d'événements.
+
+\subsubsection*{Flux de modération IA des publications}
+
+RabbitMQ est aussi utilisé pour la modération asynchrone des images publiées par les vendeurs. Dans \texttt{social/views.py}, la fonction \texttt{create\_post} ne contacte pas directement le service de modération par HTTP. Elle crée d'abord la publication dans la base du \texttt{social\_service}, puis délègue l'analyse de l'image au \texttt{moderation\_service} via un événement RabbitMQ.
+
+Le déroulement est le suivant :
+\begin{enumerate}
+  \item Le vendeur appelle l'endpoint de création d'une publication avec un \texttt{product\_id}, un titre, une description et éventuellement une image.
+  \item \texttt{create\_post} vérifie localement que le produit existe dans \texttt{ProductRef}, récupère la boutique depuis \texttt{StoreRef}, puis s'assure que le vendeur connecté est bien propriétaire de cette boutique.
+  \item Si aucune image n'est fournie, la publication est directement créée avec le statut \texttt{APPROVED}, car aucune analyse visuelle n'est nécessaire.
+  \item Si une image est fournie, la publication est créée avec le statut \texttt{PENDING}. Elle n'apparaît donc pas dans le feed public, car les endpoints de lecture filtrent les publications avec \texttt{moderation\_status = APPROVED}.
+  \item Après la création du post, \texttt{social\_service} lit les octets de l'image, les encode en Base64 et publie un événement \texttt{image.moderation.requested} dans l'exchange RabbitMQ \texttt{exposure}.
+  \item Le \texttt{moderation\_service}, abonné à cet événement via sa queue \texttt{moderation\_service\_queue}, décode l'image et l'analyse avec le modèle YOLO. Il compare les objets détectés avec les classes interdites configurées, par exemple \texttt{guns}, \texttt{swords}, \texttt{bombs}, \texttt{drugs}, \texttt{knife} ou \texttt{weapon}.
+  \item Le service de modération publie ensuite un événement \texttt{image.moderation.completed} contenant l'identifiant du post, la décision \texttt{approved}, la raison du verdict, les détections et le nom du modèle utilisé.
+  \item Le consommateur RabbitMQ de \texttt{social\_service} reçoit ce verdict et met à jour le post : \texttt{APPROVED} si l'image est acceptée, ou \texttt{REJECTED} si elle contient un objet interdit. La raison est stockée dans \texttt{moderation\_reason}.
+\end{enumerate}
+
+\begin{verbatim}
+ +------------------+       image.moderation.requested       +----------------------+
+ | social_service   | -------------------------------------> | moderation_service   |
+ | create_post      |                                        | YOLO AI scan         |
+ +--------+---------+                                        +----------+-----------+
+          ^                                                             |
+          |                                                             |
+          |       image.moderation.completed                            |
+          +-------------------------------------------------------------+
+\end{verbatim}
+
+Cette conception garde la création de publication rapide et résiliente : l'API répond après avoir créé le post et publié la demande de modération, tandis que l'analyse IA se fait en arrière-plan. Elle évite aussi un couplage fort entre \texttt{social\_service} et \texttt{moderation\_service}. Si la modération prend du temps, le post reste simplement en \texttt{PENDING}; lorsqu'un verdict arrive, l'état public de la publication est mis à jour automatiquement.
+
 Les services communiquent de mani\`ere asynchrone via RabbitMQ pour garder une coh\'erence globale.
 Le r\^ole utilisateur est un bon exemple:
 \begin{itemize}
@@ -46,6 +232,21 @@ Le r\^ole utilisateur est un bon exemple:
   \item un \'ev\'enement est publi\'e dans RabbitMQ;
   \item \texttt{user\_service} consomme l'\'ev\'enement et passe le r\^ole de \texttt{BUYER} \`a \texttt{SELLER}.
 \end{itemize}
+
+
+\begin{verbatim}
+ +------------------+                            +------------------+
+ |  store_service   |                            |   user_service   |
+ | (Crée boutique)  |                            | (Met à jour rôle)|
+ +--------+---------+                            +--------^---------+
+          |                                               |
+          | 1. Publie un événement                        | 2. Consomme l'événement
+          |    (ex: STORE_CREATED)                        |    et passe le rôle
+          v                                               |    de BUYER à SELLER
+ +------------------------------------------------------------------+
+ |                            RabbitMQ                              |
+ +------------------------------------------------------------------+
+\end{verbatim}
 
 Exception importante: la validation de paiement demande un traitement synchronis\'e (r\'eponse imm\'ediate attendue).
 En pratique, chaque service ex\'ecute au minimum:
@@ -61,34 +262,28 @@ Les valeurs d'adresse et de port proviennent du lancement (voir \texttt{services
 Ainsi, les autres services peuvent trouver dynamiquement \texttt{delivery\_service} sans configuration statique.
 
 \section{Sch\'ema global}
-\begin{center}
-\begin{tikzpicture}[
-  node distance=1.6cm and 2cm,
-  box/.style={draw, rounded corners, align=center, minimum width=2.8cm, minimum height=0.9cm},
-  broker/.style={draw, rounded corners, fill=gray!10, align=center, minimum width=3.2cm, minimum height=0.9cm},
-  >={Stealth}
-]
-\node[box] (client) {Client/API Gateway};
-\node[box, below left=of client] (store) {store\_service\\REST + consumer};
-\node[box, below=of client] (user) {user\_service\\REST + consumer};
-\node[box, below right=of client] (delivery) {delivery\_service\\REST + consumer};
-\node[box, right=3.3cm of client] (auth) {auth\_service\\JWT RS256};
-\node[broker, below=2.4cm of user] (mq) {RabbitMQ\\\'ev\'enements m\'etier};
-\node[box, right=3.3cm of mq] (consul) {Consul\\service registry};
+\begin{verbatim}
+                  +---------------------+
+                  | Client / API entry  |
+                  +----------+----------+
+                             |
+          +------------------+------------------+
+          |                  |                  |
+          v                  v                  v
+ +----------------+ +----------------+ +----------------+
+ | store_service  | | user_service   | | delivery_serv. |
+ | REST+consumer  | | REST+consumer  | | REST+consumer  |
+ +-------+--------+ +--------+-------+ +--------+-------+
+         \                 |                  /
+          \                |                 /
+           +---------------v----------------+
+           | RabbitMQ (events metier)       |
+           +--------------------------------+
 
-\draw[->] (client) -- (store);
-\draw[->] (client) -- (user);
-\draw[->] (client) -- (delivery);
-\draw[->] (client) -- (auth);
-
-\draw[->] (store) -- (mq);
-\draw[->] (mq) -- (user);
-\draw[->] (delivery) -- (mq);
-
-\draw[->, dashed] (store) -- (consul);
-\draw[->, dashed] (user) -- (consul);
-\draw[->, dashed] (delivery) -- (consul);
-\end{tikzpicture}
-\end{center}
+ +------------------+              +---------------------+
+ | auth_service     |              | Consul registry     |
+ | JWT RS256        |              | discovery services  |
+ +------------------+              +---------------------+
+\end{verbatim}
 
 \end{document}

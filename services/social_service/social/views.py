@@ -64,8 +64,16 @@ def create_post(request):
     except StoreRef.DoesNotExist:
         return Response({'error': 'Store missing for this product.'}, status=400)
 
-    if store.seller_id != request.user.id:
-        return Response({'error': 'You can only post for your own store.'}, status=403)
+    if int(store.seller_id) != int(request.user.id):
+        return Response({'error': f'{store.seller_id}!={request.user.id} You can only post for your own store.'}, status=403)
+
+    image_file = request.FILES.get('image')
+
+    # Posts without an image skip moderation and are auto-approved.
+    initial_status = (
+        Post.ModerationStatus.PENDING if image_file
+        else Post.ModerationStatus.APPROVED
+    )
 
     post = Post.objects.create(
         store_id=store.id,
@@ -73,15 +81,31 @@ def create_post(request):
         title=request.data.get('title', ''),
         description=request.data.get('description', ''),
         category=request.data.get('category', product.category),
-        image=request.FILES.get('image'),
+        image=image_file,
+        moderation_status=initial_status,
     )
+
+    if image_file:
+        from .messaging import publish_image_moderation_requested
+        with post.image.open('rb') as fh:
+            image_bytes = fh.read()
+        publish_image_moderation_requested(
+            post_id=post.id,
+            image_bytes=image_bytes,
+            content_type=getattr(image_file, 'content_type', '') or '',
+            filename=getattr(image_file, 'name', '') or '',
+        )
+
     return Response(PostSerializer(post).data, status=201)
 
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def post_detail(request, post_id):
-    post = Post.objects.filter(id=post_id).annotate(
+    post = Post.objects.filter(
+        id=post_id,
+        moderation_status=Post.ModerationStatus.APPROVED,
+    ).annotate(
         avg_rating=Avg('reviews__stars')
     ).first()
     if not post:
@@ -129,7 +153,9 @@ def feed(request):
     offset = int(request.GET.get('offset', 0))
     limit = int(request.GET.get('limit', 10))
 
-    qs = Post.objects.annotate(avg_rating=Avg('reviews__stars')).order_by('-created_at')
+    qs = Post.objects.filter(
+        moderation_status=Post.ModerationStatus.APPROVED,
+    ).annotate(avg_rating=Avg('reviews__stars')).order_by('-created_at')
     if category:
         qs = qs.filter(category=category)
     posts = list(qs[offset:offset + limit])
@@ -142,9 +168,12 @@ def search_posts(request):
     query = request.GET.get('q', '')
     category = request.GET.get('category')
 
-    qs = Post.objects.annotate(avg_rating=Avg('reviews__stars'))
+    qs = Post.objects.filter(
+        moderation_status=Post.ModerationStatus.APPROVED,
+    ).annotate(avg_rating=Avg('reviews__stars'))
     if query:
-        qs = qs.filter(Q(title__icontains=query) | Q(description__icontains=query))
+        qs = qs.filter(Q(title__icontains=query) |
+                       Q(description__icontains=query))
     if category:
         qs = qs.filter(category=category)
 
@@ -162,7 +191,10 @@ def page_detail(request, store_id):
         return Response({'error': 'Store not found.'}, status=404)
 
     posts = list(
-        Post.objects.filter(store_id=store_id)
+        Post.objects.filter(
+            store_id=store_id,
+            moderation_status=Post.ModerationStatus.APPROVED,
+        )
         .annotate(avg_rating=Avg('reviews__stars'))
         .order_by('-created_at')
     )
