@@ -1,0 +1,94 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning}
+\geometry{margin=2.2cm}
+
+\title{Rapport technique court\\Architecture et infrastructure}
+\author{}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+Ce projet est un backend pour une plateforme e-commerce proche d'un r\'eseau social. 
+Il g\`ere des fonctions logistiques importantes: paiements, livraisons, catalogue produit et stock.
+L'architecture suit un mod\`ele microservices: chaque service est s\'epar\'e selon une responsabilit\'e m\'etier claire.
+
+\section{Architecture et infrastructure}
+
+\subsection{1. APIs REST}
+Chaque microservice expose une API REST.
+Cette API permet aux autres services et aux clients d'appeler les fonctionnalit\'es de mani\`ere standard (HTTP + JSON).
+Le d\'ecoupage par service garde le code plus simple \`a maintenir et \`a faire \'evoluer.
+
+\subsection{2. Authentification}
+L'authentification repose sur des tokens JWT.
+Un token contient des \textit{claims} (par exemple l'identit\'e utilisateur, le r\^ole, la dur\'ee de validit\'e).
+Le syst\`eme utilise:
+\begin{itemize}
+  \item un \textbf{access token} (courte dur\'ee) pour acc\'eder aux APIs;
+  \item un \textbf{refresh token} (dur\'ee plus longue) pour obtenir un nouvel access token.
+\end{itemize}
+
+La signature est v\'erifi\'ee localement dans chaque service avec des cl\'es RS256.
+Donc, un service n'a pas besoin d'appeler le service d'auth \`a chaque requ\^ete pour valider un token.
+
+\subsection{3. Coh\'erence d'\'etat avec RabbitMQ}
+Les services communiquent de mani\`ere asynchrone via RabbitMQ pour garder une coh\'erence globale.
+Le r\^ole utilisateur est un bon exemple:
+\begin{itemize}
+  \item un utilisateur cr\'ee une boutique dans \texttt{store\_service};
+  \item un \'ev\'enement est publi\'e dans RabbitMQ;
+  \item \texttt{user\_service} consomme l'\'ev\'enement et passe le r\^ole de \texttt{BUYER} \`a \texttt{SELLER}.
+\end{itemize}
+
+Exception importante: la validation de paiement demande un traitement synchronis\'e (r\'eponse imm\'ediate attendue).
+En pratique, chaque service ex\'ecute au minimum:
+\begin{itemize}
+  \item un serveur REST;
+  \item un processus consommateur (\texttt{start\_consumer}) pour les messages RabbitMQ.
+\end{itemize}
+
+\subsection{4. Discovery et registry}
+Le projet utilise Consul pour la d\'ecouverte de services.
+Par exemple, dans \texttt{services/delivery\_service/delivery/consul\_registry.py}, le service s'enregistre avec ses m\'etadonn\'ees r\'eseau.
+Les valeurs d'adresse et de port proviennent du lancement (voir \texttt{services/delivery\_service/run.sh}).
+Ainsi, les autres services peuvent trouver dynamiquement \texttt{delivery\_service} sans configuration statique.
+
+\section{Sch\'ema global}
+\begin{center}
+\begin{tikzpicture}[
+  node distance=1.6cm and 2cm,
+  box/.style={draw, rounded corners, align=center, minimum width=2.8cm, minimum height=0.9cm},
+  broker/.style={draw, rounded corners, fill=gray!10, align=center, minimum width=3.2cm, minimum height=0.9cm},
+  >={Stealth}
+]
+\node[box] (client) {Client/API Gateway};
+\node[box, below left=of client] (store) {store\_service\\REST + consumer};
+\node[box, below=of client] (user) {user\_service\\REST + consumer};
+\node[box, below right=of client] (delivery) {delivery\_service\\REST + consumer};
+\node[box, right=3.3cm of client] (auth) {auth\_service\\JWT RS256};
+\node[broker, below=2.4cm of user] (mq) {RabbitMQ\\\'ev\'enements m\'etier};
+\node[box, right=3.3cm of mq] (consul) {Consul\\service registry};
+
+\draw[->] (client) -- (store);
+\draw[->] (client) -- (user);
+\draw[->] (client) -- (delivery);
+\draw[->] (client) -- (auth);
+
+\draw[->] (store) -- (mq);
+\draw[->] (mq) -- (user);
+\draw[->] (delivery) -- (mq);
+
+\draw[->, dashed] (store) -- (consul);
+\draw[->, dashed] (user) -- (consul);
+\draw[->, dashed] (delivery) -- (consul);
+\end{tikzpicture}
+\end{center}
+
+\end{document}
