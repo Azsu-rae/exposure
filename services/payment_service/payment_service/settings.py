@@ -8,7 +8,7 @@ environ.Env.read_env(BASE_DIR / '.env')
 
 SECRET_KEY = env('SECRET_KEY')
 DEBUG = env('DEBUG')
-ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[])
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=['*'])
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -53,4 +53,5 @@ SIMPLE_JWT = {
     'VERIFYING_KEY': open(_KEYS_DIR / 'public.pem').read(),
 }
 
-RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = env(
+    'RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/')

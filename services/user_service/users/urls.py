@@ -5,13 +5,15 @@ from . import views
 
 urlpatterns = [
 
-    path("auth/register/",        views.register),
-    path("auth/change-password/", views.change_password),
+    path("users/health/",        views.health),
 
-    path("auth/login/",           views.login),
-    path("auth/logout/",          views.logout),
+    path("users/register/",        views.register),
+    path("users/change-password/", views.change_password),
 
-    path("auth/refresh/",         views.refresh_token),
+    path("users/login/",           views.login),
+    path("users/logout/",          views.logout),
+
+    path("users/refresh/",         views.refresh_token),
 
     path("profile/",              views.my_profile),
     path("profile/update/",       views.update_profile),
@@ -19,4 +21,5 @@ urlpatterns = [
     path("profile/delete/",       views.delete_account),
 
     path("lookup/",               views.lookup_user),
+    path("internal/lookup/",      views.internal_lookup_user),
 ]

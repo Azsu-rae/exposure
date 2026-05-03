@@ -1,4 +1,5 @@
 from django.core.management.base import BaseCommand
+
 from delivery.models import Delivery, Driver, DeliveryCompany
 from delivery.utils.hardcoded import (
     SAMPLE_DRIVERS,
@@ -42,8 +43,8 @@ class Command(BaseCommand):
                 defaults=data,
             )
             drivers.append(driver)
-            if created:
-                self.stdout.write(f"  Created driver: {driver.name}")
+            msg = "Created" if created else "Found existing"
+            self.stdout.write(f"  {msg} driver: {driver.name}")
         return drivers
 
     def create_companies(self):
@@ -54,8 +55,8 @@ class Command(BaseCommand):
                 defaults=data,
             )
             companies.append(company)
-            if created:
-                self.stdout.write(f"  Created company: {company.name}")
+            msg = "Created" if created else "Found existing"
+            self.stdout.write(f"  {msg} company: {company.name}")
         return companies
 
     def create_deliveries(self, drivers, companies):
@@ -65,14 +66,11 @@ class Command(BaseCommand):
             delivery, created = Delivery.objects.get_or_create(
                 order_id=data["order_id"],
                 defaults={
-                    "order_id": data["order_id"],
                     "driver": driver,
                     "company": company,
                     "delivery_arrival_address": data["delivery_arrival_address"],
                     "estimated_delivery_time": get_estimated_delivery_time(),
                 },
             )
-            if created:
-                self.stdout.write(
-                    f"  Created delivery: Order #{delivery.order_id}"
-                )
+            msg = "Created" if created else "Found existing"
+            self.stdout.write(f"  {msg} delivery: Order #{delivery.order_id}")

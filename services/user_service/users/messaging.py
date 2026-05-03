@@ -12,13 +12,15 @@ _BINDINGS = (
     'payment.released',    # credit seller balance
 )
 
-RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = os.environ.get(
+    'RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
 
 
 def _channel():
     connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
     channel = connection.channel()
-    channel.exchange_declare(exchange=EXCHANGE, exchange_type='topic', durable=True)
+    channel.exchange_declare(
+        exchange=EXCHANGE, exchange_type='topic', durable=True)
     return connection, channel
 
 
@@ -82,7 +84,8 @@ def _handle_payment_released(data):
         return
     profile.balance = (profile.balance or 0) + amount
     profile.save(update_fields=['balance'])
-    print(f'[user] credited seller {seller_id} +{amount} (balance now {profile.balance})')
+    print(f'[user] credited seller {
+          seller_id} +{amount} (balance now {profile.balance})')
 
 
 def _on_message(ch, method, properties, body):
@@ -103,7 +106,8 @@ def start_consumer():
     connection, channel = _channel()
     channel.queue_declare(queue=QUEUE, durable=True)
     for routing_key in _BINDINGS:
-        channel.queue_bind(exchange=EXCHANGE, queue=QUEUE, routing_key=routing_key)
+        channel.queue_bind(exchange=EXCHANGE, queue=QUEUE,
+                           routing_key=routing_key)
     channel.basic_qos(prefetch_count=1)
     channel.basic_consume(queue=QUEUE, on_message_callback=_on_message)
     print('[user] Waiting for events...')

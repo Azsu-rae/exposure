@@ -1,4 +1,3 @@
-from django.http import StreamingHttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 
@@ -6,7 +5,6 @@ from rest_framework import viewsets
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.filters import OrderingFilter, SearchFilter
-from rest_framework.permissions import IsAuthenticated
 
 from .serialiser import DeliverySerializer, DriverSerializer, DeliveryCompanySerializer, OfficeSerializer
 from .models import Delivery, Driver, DeliveryCompany, RetrievalOffice
@@ -18,6 +16,18 @@ import time
 import random
 import threading
 import logging
+
+
+from django.http import StreamingHttpResponse, JsonResponse
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({'status': 'ok'})
+
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +47,7 @@ class DeliveryViewSet(viewsets.ModelViewSet):
         if self.request.method in ('GET', 'HEAD', 'OPTIONS'):
             return [IsAuthenticated()]
         return [IsDelivery()]
+
 
 class DriverViewSet(viewsets.ModelViewSet):
 

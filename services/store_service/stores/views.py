@@ -8,6 +8,16 @@ from stores.serializers import OrderSerializer, ProductSerializer, StoreSerializ
 from stores.models import Order, OrderItem, Product, Store
 from stores.permissions import IsBuyer, IsSeller
 
+from django.http import StreamingHttpResponse, JsonResponse
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({'status': 'ok'})
+
 
 class StoreViewSet(viewsets.ModelViewSet):
     serializer_class = StoreSerializer

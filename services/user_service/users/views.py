@@ -1,5 +1,8 @@
 # users/views.py
 
+from django.http import StreamingHttpResponse, JsonResponse
+import os
+
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from rest_framework.decorators import api_view, permission_classes
@@ -15,6 +18,16 @@ from .serializers import (
     UserSerializer,
     SellerProfileSerializer,
 )
+
+import user_service.settings as settings
+
+INTERNAL_SECRET = settings.env("INTERNAL_API_SECRET", default="")
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({'status': 'ok'})
 
 
 def get_tokens(user):
@@ -149,6 +162,22 @@ def delete_account(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def lookup_user(request):
+    username = request.query_params.get("username")
+    if not username:
+        return Response({"error": "username query param required."}, status=400)
+    try:
+        user = User.objects.get(username=username)
+        return Response({"id": user.id, "username": user.username, "role": user.role})
+    except User.DoesNotExist:
+        return Response({"error": "User not found."}, status=404)
+
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def internal_lookup_user(request):
+    secret = request.headers.get("X-Internal-Secret", "")
+    if not INTERNAL_SECRET or secret != INTERNAL_SECRET:
+        return Response({"error": "Unauthorized"}, status=401)
     username = request.query_params.get("username")
     if not username:
         return Response({"error": "username query param required."}, status=400)

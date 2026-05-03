@@ -6,6 +6,8 @@ from delivery.views import (
     StartSimulationView, StreamDeliveryView, DeliveryStatusView,
 )
 
+from delivery import views
+
 router = routers.DefaultRouter()
 router.register(r'deliveries', DeliveryViewSet)
 router.register(r'drivers', DriverViewSet)
@@ -13,6 +15,8 @@ router.register(r'companies', CompanyViewSet)
 router.register(r'offices', OfficeViewSet)
 
 urlpatterns = [
+    path('api/delivery/health/', views.health),
+
     path('api/', include(router.urls)),
 
     path('api/deliveries/<int:delivery_id>/simulate/start/', StartSimulationView.as_view(), name='start_simulation'),

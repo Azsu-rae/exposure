@@ -56,4 +56,5 @@ SIMPLE_JWT = {
     'VERIFYING_KEY': open(_KEYS_DIR / 'public.pem').read(),
 }
 
-RABBITMQ_URL = env('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = env(
+    'RABBITMQ_URL', default='amqp://guest:guest@localhost:5672/')

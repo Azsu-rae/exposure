@@ -8,6 +8,16 @@ from .serializers import PaymentCreateSerializer, PaymentSerializer
 from .simulator import process_new_payment
 from .permissions import IsBuyer, IsDelivery
 
+from django.http import StreamingHttpResponse, JsonResponse
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, permission_classes
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    return JsonResponse({'status': 'ok'})
+
 
 class PaymentViewSet(mixins.ListModelMixin,
                      mixins.RetrieveModelMixin,
