@@ -68,6 +68,10 @@ def create_post(request):
         return Response({'error': f'{store.seller_id}!={request.user.id} You can only post for your own store.'}, status=403)
 
     image_file = request.FILES.get('image')
+    if image_file:
+        print("image file found")
+    else:
+        print("image file not found")
 
     # Posts without an image skip moderation and are auto-approved.
     initial_status = (
@@ -154,7 +158,10 @@ def feed(request):
     limit = int(request.GET.get('limit', 10))
 
     qs = Post.objects.filter(
-        moderation_status=Post.ModerationStatus.APPROVED,
+        moderation_status__in=[
+            Post.ModerationStatus.APPROVED,
+            Post.ModerationStatus.PENDING,
+        ]
     ).annotate(avg_rating=Avg('reviews__stars')).order_by('-created_at')
     if category:
         qs = qs.filter(category=category)

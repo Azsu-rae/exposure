@@ -3,6 +3,7 @@ import json
 import os
 
 import pika
+from django.db import close_old_connections
 
 from .models import UserRef, StoreRef, ProductRef
 
@@ -117,6 +118,11 @@ def _apply_moderation_verdict(data):
 
 def _on_message(ch, method, properties, body):
     routing_key = method.routing_key
+    # Drop any stale DB connections before touching the ORM. A long-running
+    # consumer has no request lifecycle, so Django never refreshes them on
+    # its own — without this, the first query after a Postgres-side timeout
+    # blows up with "server closed the connection unexpectedly".
+    close_old_connections()
     try:
         data = json.loads(body)
         if routing_key == 'user.created' or routing_key == 'user.updated':

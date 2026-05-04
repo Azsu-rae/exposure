@@ -102,3 +102,10 @@ http://localhost:15672
 ```
 
 the default credentails are `guest` for both the username and password.
+
+# Traefik
+
+
+```
+/etc/traefik/traefik.yml
+```

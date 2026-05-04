@@ -127,6 +127,18 @@ DRF DefaultRouter — standard list/retrieve/create/update/destroy on each resou
 
 If `method=CARD`, open `checkout_url` in a WebView. The simulator marks it `HELD` immediately on success — treat that as "payment initiated", not "settled". Settlement happens via delivery state changes.
 
+### AI image moderation (moderation_service)
+
+Standalone YOLO-backed service that scans product images for restricted content (guns, knives, drugs, etc.). It plays two roles:
+
+- **Async pipeline (the canonical path).** `social_service` automatically routes every image attached to a post through this service via RabbitMQ — the Flutter app does **not** invoke this directly for posts. The verdict eventually flips the post's `moderation_status` (see the new gotcha below).
+- **Synchronous pre-flight (optional, useful for UX).** Before submitting a post, the app can call this endpoint directly to get a fast verdict and surface "this image will be rejected" before the user uploads.
+
+| Method | Path                              | Notes                                          |
+|--------|-----------------------------------|------------------------------------------------|
+| GET    | `/api/moderation/health/`         | Reports `model_loaded` — handy for a debug screen |
+| POST   | `/api/moderation/moderate/`       | **Multipart** with `image` field (or repeated `images`); returns `{approved, reason, detections: [{class, confidence}], model}`. `200` = approved, `400` = rejected. |
+
 ---
 
 ## Eventual-consistency gotchas the UI must handle
@@ -147,6 +159,16 @@ These are facts about the backend that affect what screens have to render gracef
 4. **Social refs are eventually consistent.**
    social_service shows usernames and store names from a local read model rebuilt by RabbitMQ events. There is a small window where a renamed store / username still shows the old value. Don't add complex refetch loops — accept the staleness.
 
+5. **Post image moderation is async.**
+   `POST /api/posts/create/` with an image returns `201` immediately with `moderation_status: "PENDING"`. The image is then routed through `moderation_service` via RabbitMQ. A few seconds later the field flips to `APPROVED` or `REJECTED` (with `moderation_reason` set when rejected). The public feed (`/api/posts/`, `/api/search/`, `/api/pages/{id}/`, `/api/posts/{id}/`) **only returns `APPROVED` posts**, so a seller's freshly-created post will not appear there until the verdict lands.
+   - Posts without an image skip moderation and are auto-approved synchronously.
+   - In the **Merchant > My Posts** view, surface the moderation state explicitly:
+     - `PENDING` → spinner + "Reviewing your image…" with a polite refresh hint.
+     - `APPROVED` → normal card.
+     - `REJECTED` → red banner + the `moderation_reason` text + "Delete and try again" CTA.
+   - For the seller-only view, request all statuses (the public endpoints filter to `APPROVED`; you'll need a seller-scoped endpoint or to display from a local optimistic cache until the public list refreshes — pick whichever matches the existing app's pattern).
+   - **Do not poll aggressively.** A single follow-up fetch 3–5 seconds after creation, plus pull-to-refresh, is enough — the verdict typically arrives in well under that.
+
 ---
 
 ## What NOT to change
@@ -154,9 +176,20 @@ These are facts about the backend that affect what screens have to render gracef
 These are intentional in the existing app. Leave them alone unless explicitly broken.
 
 - **Local-only features**: likes (per-post toggle in `shared_preferences`), follows, MockMode, theme. There is no backend API for these — keep the stubs.
-- **Client-side AI moderation simulation**: keyword check before product/post submission. Pure local check; don't try to wire it to a real endpoint.
 - **AI document processing screen**: pure UI mock; don't connect it.
 - **Cart**: local state, persisted in `shared_preferences`. Group by store at checkout — backend has no multi-store cart.
+
+### Worth reconsidering: client-side AI moderation simulation
+
+The original app has a local keyword-based "AI moderation" check (`drug`, `weapon`, etc.) that runs before product/post submission. It was a stub for a future API.
+
+**That API now exists** (`POST /api/moderation/moderate/`), and the backend also runs it automatically on every uploaded post image via RabbitMQ. You have a choice:
+
+- **Keep the local keyword check as-is.** It's instant, costs nothing, and gives the user immediate feedback before they even upload. Treat it as a UX optimisation, not a security control.
+- **Or wire the moderation service in as a pre-flight call.** Before `POST /api/posts/create/`, send the chosen image to `POST /api/moderation/moderate/` first. If rejected, show the reason and don't bother uploading the post. Adds 1–3 s of latency but matches what the backend will decide.
+- **Best of both.** Local keyword check for instant feedback on obviously bad input; real moderation call as a confirmation gate for everything else.
+
+Whatever you pick, **the backend is still the authority** — even an approved client-side preview can be rejected by the async pipeline once the post is live, so still handle the eventual `REJECTED` state described above.
 
 ---
 
@@ -172,6 +205,10 @@ Tick each off as you confirm it in the code:
 - [ ] All endpoint paths in the data layer match the table above (especially `/api/users/login/` not `/api/auth/login/`).
 - [ ] `POST /api/orders/` body shape matches: `{shipping_address, payment_method, items: [{product_id, quantity}]}`.
 - [ ] `POST /api/posts/create/` is sent as **multipart** when an image is attached.
+- [ ] Post DTOs include `moderation_status` (`PENDING` / `APPROVED` / `REJECTED`) and `moderation_reason`.
+- [ ] Merchant > My Posts shows pending/rejected states with the rejection reason inline.
+- [ ] After creating a post with an image, the seller view is refreshed once a few seconds later (or on pull-to-refresh) to pick up the verdict — no aggressive polling.
+- [ ] Decided whether to keep the local keyword check, replace it with `POST /api/moderation/moderate/`, or run both. Picked one and applied it consistently.
 - [ ] Tracking screen handles the "no Delivery row yet" 404 with a retry loop.
 - [ ] After a successful first `POST /api/stores/`, the app re-fetches `/api/profile/` before revealing merchant UI.
 - [ ] SSE client passes the `Authorization` header and stops on `done: true`.

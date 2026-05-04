@@ -20,9 +20,13 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
 
     'delivery',
+    "corsheaders",
 ]
 
+CORS_ALLOW_ALL_ORIGINS = True
+
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # must be near the top
     'django.middleware.security.SecurityMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',

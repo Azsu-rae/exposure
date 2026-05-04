@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.5.3)  4 MAY 2026 00:27
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026/Arch Linux) (preloaded format=pdflatex 2026.5.3)  4 MAY 2026 01:20
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -239,68 +239,68 @@ Overfull \hbox (12.13086pt too wide) in paragraph at lines 165--166
 nt aux services de s'authentifier mutuellement
  []
 
+[2]
+Overfull \hbox (4.82513pt too wide) in paragraph at lines 183--183
+[]          \OT1/cmtt/m/n/10.95 | 1. Publie un ^^Sev^^Senement                 
+       | 2. Consomme l'^^Sev^^Senement[] 
+ []
 
-Overfull \hbox (9.86731pt too wide) in paragraph at lines 172--173
+
+Overfull \hbox (9.86731pt too wide) in paragraph at lines 195--196
 []\OT1/cmr/bx/n/10.95 Source de v^^Serit^^Se : \OT1/cmtt/m/n/10.95 user[]servic
 e \OT1/cmr/m/n/10.95 poss^^Rede les utilisateurs, \OT1/cmtt/m/n/10.95 store[]se
 rvice \OT1/cmr/m/n/10.95 poss^^Rede les boutiques
  []
 
-[2]
-Overfull \hbox (17.81119pt too wide) in paragraph at lines 180--181
+
+Overfull \hbox (17.81119pt too wide) in paragraph at lines 203--204
 \OT1/cmr/m/it/10.95 v^^Serit^^Se | elles ne sont jamais modifi^^Sees directemen
 t par la logique m^^Setier de \OT1/cmtt/m/it/10.95 social[]service\OT1/cmr/m/it
 /10.95 . 
  []
 
-
-Overfull \hbox (7.75153pt too wide) in paragraph at lines 201--202
+[3]
+Overfull \hbox (7.75153pt too wide) in paragraph at lines 224--225
 \OT1/cmr/m/n/10.95 Dans \OT1/cmtt/m/n/10.95 social/views.py\OT1/cmr/m/n/10.95 ,
  la fonction \OT1/cmtt/m/n/10.95 create[]post \OT1/cmr/m/n/10.95 ne contacte pa
 s directement le service de mod^^Seration
  []
 
 
-Overfull \hbox (22.04799pt too wide) in paragraph at lines 208--209
+Overfull \hbox (22.04799pt too wide) in paragraph at lines 231--232
 \OT1/cmr/m/n/10.95 pas dans le feed public, car les endpoints de lecture filtre
 nt les publications avec \OT1/cmtt/m/n/10.95 moderation[]status
  []
 
-[3]
-Overfull \hbox (7.80995pt too wide) in paragraph at lines 211--212
+
+Overfull \hbox (7.80995pt too wide) in paragraph at lines 234--235
 []\OT1/cmr/m/n/10.95 Le service de mod^^Seration publie ensuite un ^^Sev^^Senem
 ent \OT1/cmtt/m/n/10.95 image.moderation.completed \OT1/cmr/m/n/10.95 contenant
 
  []
 
 
-Overfull \hbox (16.32251pt too wide) in paragraph at lines 216--216
+Overfull \hbox (16.32251pt too wide) in paragraph at lines 239--239
 [] \OT1/cmtt/m/n/10.95 +------------------+       image.moderation.requested   
     +----------------------+ 
  []
 
 
-Overfull \hbox (16.32251pt too wide) in paragraph at lines 217--217
+Overfull \hbox (16.32251pt too wide) in paragraph at lines 240--240
 [] \OT1/cmtt/m/n/10.95 | social_service   | -----------------------------------
 --> | moderation_service   |[] 
  []
 
 
-Overfull \hbox (16.32251pt too wide) in paragraph at lines 218--218
+Overfull \hbox (16.32251pt too wide) in paragraph at lines 241--241
 [] \OT1/cmtt/m/n/10.95 | create_post      |                                    
     | YOLO AI scan         |[] 
  []
 
 
-Overfull \hbox (16.32251pt too wide) in paragraph at lines 219--219
+Overfull \hbox (16.32251pt too wide) in paragraph at lines 242--242
 [] \OT1/cmtt/m/n/10.95 +--------+---------+                                    
     +----------+-----------+[] 
- []
-
-
-Overfull \hbox (4.82513pt too wide) in paragraph at lines 243--243
-[]          \OT1/cmtt/m/n/10.95 | 1. Publie un ^^Sev^^Senement                 
-       | 2. Consomme l'^^Sev^^Senement[] 
  []
 
 [4]
@@ -319,7 +319,7 @@ L3 programming layer <2026-01-19>
 Here is how much of TeX's memory you used:
  4804 strings out of 469515
  73137 string characters out of 5470808
- 552405 words of memory out of 5000000
+ 553405 words of memory out of 5000000
  33460 multiletter control sequences out of 15000+600000
  633775 words of font info for 61 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
@@ -331,7 +331,7 @@ type1/public/amsfonts/cm/cmitt10.pfb></usr/share/texmf-dist/fonts/type1/public/
 amsfonts/cm/cmr10.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmr
 12.pfb></usr/share/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/s
 hare/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb>
-Output written on main.pdf (6 pages, 137544 bytes).
+Output written on main.pdf (6 pages, 137475 bytes).
 PDF statistics:
  63 PDF objects out of 1000 (max. 8388607)
  39 compressed objects within 1 object stream

@@ -166,6 +166,29 @@ Pour l'authentification inter-services (cross-service), le système ne s'appuie 
 
 \subsection{3. Coh\'erence d'\'etat avec RabbitMQ}
 
+Le r\^ole utilisateur est egalement un bon exemple:
+\begin{itemize}
+  \item un utilisateur cr\'ee une boutique dans \texttt{store\_service};
+  \item un \'ev\'enement est publi\'e dans RabbitMQ;
+  \item \texttt{user\_service} consomme l'\'ev\'enement et passe le r\^ole de \texttt{BUYER} \`a \texttt{SELLER}.
+\end{itemize}
+
+
+\begin{verbatim}
+ +------------------+                            +------------------+
+ |  store_service   |                            |   user_service   |
+ | (Crée boutique)  |                            | (Met à jour rôle)|
+ +--------+---------+                            +--------^---------+
+          |                                               |
+          | 1. Publie un événement                        | 2. Consomme l'événement
+          |    (ex: STORE_CREATED)                        |    et passe le rôle
+          v                                               |    de BUYER à SELLER
+ +------------------------------------------------------------------+
+ |                            RabbitMQ                              |
+ +------------------------------------------------------------------+
+\end{verbatim}
+
+
 Les modèles \texttt{UserRef}, \texttt{StoreRef} et \texttt{ProductRef} (dans \texttt{social/models.py}) sont des projections locales en lecture seule de données appartenant à d'autres services. Le schéma de fonctionnement est le suivant :
 
 \begin{itemize}
@@ -224,29 +247,6 @@ Le déroulement est le suivant :
 \end{verbatim}
 
 Cette conception garde la création de publication rapide et résiliente : l'API répond après avoir créé le post et publié la demande de modération, tandis que l'analyse IA se fait en arrière-plan. Elle évite aussi un couplage fort entre \texttt{social\_service} et \texttt{moderation\_service}. Si la modération prend du temps, le post reste simplement en \texttt{PENDING}; lorsqu'un verdict arrive, l'état public de la publication est mis à jour automatiquement.
-
-Les services communiquent de mani\`ere asynchrone via RabbitMQ pour garder une coh\'erence globale.
-Le r\^ole utilisateur est un bon exemple:
-\begin{itemize}
-  \item un utilisateur cr\'ee une boutique dans \texttt{store\_service};
-  \item un \'ev\'enement est publi\'e dans RabbitMQ;
-  \item \texttt{user\_service} consomme l'\'ev\'enement et passe le r\^ole de \texttt{BUYER} \`a \texttt{SELLER}.
-\end{itemize}
-
-
-\begin{verbatim}
- +------------------+                            +------------------+
- |  store_service   |                            |   user_service   |
- | (Crée boutique)  |                            | (Met à jour rôle)|
- +--------+---------+                            +--------^---------+
-          |                                               |
-          | 1. Publie un événement                        | 2. Consomme l'événement
-          |    (ex: STORE_CREATED)                        |    et passe le rôle
-          v                                               |    de BUYER à SELLER
- +------------------------------------------------------------------+
- |                            RabbitMQ                              |
- +------------------------------------------------------------------+
-\end{verbatim}
 
 Exception importante: la validation de paiement demande un traitement synchronis\'e (r\'eponse imm\'ediate attendue).
 En pratique, chaque service ex\'ecute au minimum:
