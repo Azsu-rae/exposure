@@ -2,6 +2,8 @@ import json
 import os
 from decimal import Decimal
 
+from user_service.settings import env
+
 import pika
 
 EXCHANGE = 'exposure'
@@ -12,8 +14,7 @@ _BINDINGS = (
     'payment.released',    # credit seller balance
 )
 
-RABBITMQ_URL = os.environ.get(
-    'RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = env('RABBITMQ_URL')
 
 
 def _channel():

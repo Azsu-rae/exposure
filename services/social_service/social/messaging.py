@@ -7,6 +7,8 @@ from django.db import close_old_connections
 
 from .models import UserRef, StoreRef, ProductRef
 
+from social_service.settings import env
+
 EXCHANGE = 'exposure'
 QUEUE = 'social_service_queue'
 
@@ -19,13 +21,14 @@ _BINDINGS = (
     'image.moderation.completed',
 )
 
-RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = env('RABBITMQ_URL')
 
 
 def _channel():
     connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
     channel = connection.channel()
-    channel.exchange_declare(exchange=EXCHANGE, exchange_type='topic', durable=True)
+    channel.exchange_declare(
+        exchange=EXCHANGE, exchange_type='topic', durable=True)
     return connection, channel
 
 
@@ -151,7 +154,8 @@ def start_consumer():
     connection, channel = _channel()
     channel.queue_declare(queue=QUEUE, durable=True)
     for routing_key in _BINDINGS:
-        channel.queue_bind(exchange=EXCHANGE, queue=QUEUE, routing_key=routing_key)
+        channel.queue_bind(exchange=EXCHANGE, queue=QUEUE,
+                           routing_key=routing_key)
     channel.basic_qos(prefetch_count=10)
     channel.basic_consume(queue=QUEUE, on_message_callback=_on_message)
     print('[social] Waiting for events...')

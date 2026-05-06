@@ -3,6 +3,8 @@ import os
 
 import pika
 
+from store_service.settings import env
+
 EXCHANGE = 'exposure'
 QUEUE = 'store_service_queue'
 
@@ -10,7 +12,7 @@ _BINDINGS = (
     'delivery.status_changed',
 )
 
-RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672/')
+RABBITMQ_URL = env('RABBITMQ_URL')
 
 
 def _channel():

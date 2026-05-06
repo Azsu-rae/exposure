@@ -2,14 +2,14 @@ import requests
 import socket
 import os
 
-import social_service.settings as settings
+from social_service.settings import env
 
 # Ideally, point this to your local Consul agent (e.g., http://localhost:8500 or http://consul:8500)
 # Using ngrok for the agent URL can cause latency or health check issues.
-CONSUL_URL = settings.env("CONSUL_URL", default="http://localhost:8500")
+CONSUL_URL = env("CONSUL_URL")
 
 SERVICE_NAME = "social"
-SERVICE_PORT = int(settings.env("PORT", default="8000"))
+SERVICE_PORT = int(env("PORT"))
 
 
 def register_service():
